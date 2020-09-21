@@ -1,0 +1,12 @@
+name: STSMap
+title: STSMap
+username:
+account: gabriel-watson
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2598529
+bundleId: 3431538
+url: https://gabriel-watson.shinyapps.io/STSMap/
+when: 1595604387.37396
+asMultiple: FALSE
+asStatic: FALSE
