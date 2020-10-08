@@ -27,12 +27,13 @@ ui <- fluidPage(
   #Map
   div(id = "wrapper",
       
-      
+      #Zoom Selction 
+      selectizeInput("inZoomSelector", "Zoom Extent",
+                     c("Loading Layers"), multiple = FALSE),
       
       #Layer Selection
-      selectizeInput("inActionSelector", "Input checkbox",
+      selectizeInput("inActionSelector", "Choose an Action",
                      c("Loading Layers"), multiple = TRUE),
-
 
       div(id = "main-panel",
           leafletOutput("map")
@@ -68,15 +69,6 @@ ui <- fluidPage(
                    # Zoom Controls 
               ),
               div(  id = "action-panel",
-                 #Map extent switching buttons
-                    tags$p("Long Island Region"),
-
-                    actionButton("west", "Long Island"),
-                    actionButton("east", "Western Narrows"),
-                    actionButton("west", "Eastern Narrows"),
-                    actionButton("east", "Western Basin"),
-                    actionButton("west", "Central Basin"),
-                    actionButton("east", "Eastern Basin"),
 
                      textOutput("mapclick")
               )
@@ -92,19 +84,22 @@ server <- function(input, output, session) {
   # this lets us bypass the Authorization step from gsheet4 if they are ok with just having the googlesheet be public - I can hook it up to be private though after the fact.
   gs4_deauth()
   
-  Import_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1pZBhwo97IHkp-bNCA-m9UBJyBsO9ngnyuFylfAMbZs4/edit#gid=0")
+  Import_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1_kWe4pEOo7yur9WPMh1YabdCSjoIz-yS37jM6T5_oWw/edit#gid=0")
+  ZoomExtent_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1viLwGCnhsdhfgsgIHjYYj6INNu7YqG_h8srlQsCNf6Y/edit#gid=0")
+ # Symbology_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1N0L7-gZH4iqxrbQVYLtLJU7Dbuz2nVnYE-8wUrzPK6o/edit#gid=0")
   
-  Symbology_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1N0L7-gZH4iqxrbQVYLtLJU7Dbuz2nVnYE-8wUrzPK6o/edit#gid=0")
   #### END DATASETIMPORT #####
   
   
   #### ACTION INPUT DATA HANDLING ###
   
   # Updates the Action selector once the input sheets are handled above 
-  observe({
-    updateSelectizeInput(session, "inActionSelector",
+
+  updateSelectizeInput(session, "inActionSelector",
                          choices = Import_V1$Action)
-  })
+  
+  updateSelectizeInput(session, "inZoomSelector",
+                       choices = ZoomExtent_V1$Extent)
   
   # Reactive element that gets the correct Layer Selection and returns "ActionSelection()" for use in mapping from Action Selector
   ActionSelection <- reactive ({
@@ -112,168 +107,104 @@ server <- function(input, output, session) {
     #Converts the input datatype into list --- I think...
     y <- input$inActionSelector
     
+    # Testing # 
+    #write.csv(y, "y.csv")
+    
     #Sets dataframe to all Actions if no selection is chosen
     if (is.null(y))
        {
       Layers <- Import_V1
+      write.csv(Layers, "Layers.csv")
       return(Layers)
     }
     #Sets dataframe to selected Actions
     else
       {
-    Layers <-filter(Import_V1, Action %in% y)
+    Layers <- filter(Import_V1, Action %in% y)
+    write.csv(Layers, "Layers.csv")
     return(Layers)
       }
     
   })
   
-  
-  #Gets the selected zoom extent
-  
-  extent <- reactiveValues(data=NULL)
-  
-  observeEvent(input$west, {
-    extent$data$lat <- 41.37836624
-    extent$data$long <- -82.49326 
-    extent$data$zoom <- 12
-  })
+  ###### END ACTION INPUT HANDLING 
   
   
-  observeEvent(input$east, {
-    extent$data$lat <- 41.249059
-    extent$data$long <- -82.012431 
-    extent$data$zoom <- 12
+  ##### ZOOM EXTENT HANDLING ####
+  
+  # Updates the Zoom selector once the input sheets are handled above 
+  ZoomSelection <- reactive ({
+    req(input$inZoomSelector)
+    x <- as.character(input$inZoomSelector) 
+    print(x)
+    # Testing write.csv(x, "x.csv")
+    if (x == "Loading Layers")
+      {
+      ZoomChoice <- ZoomExtent_V1 %>%
+      filter(Extent == "Whole Region")
+  #  write.csv(ZoomChoice, "Zoom12345.csv")
+      }
+    else
+      {
+       ZoomChoice <- 
+       filter(ZoomExtent_V1, Extent %in% x)
+       write.csv(ZoomChoice, "Zoom12345.csv")
+      }
+    return(ZoomChoice)
   })
   
   
   #Gets the latlong from user click and creates variable of Dataframe
-  Io_Map_Click <- reactive({
+  MapSelection <- reactive({
     # Gets the latlongs from the leaflet mapclick 
     lat <- input$map_marker_click$lat
     lon <- input$map_marker_click$lng
     
     # Creating a dataframe that contains the correct results based on user input.
-    Io_Data <- Map_Data_All %>% 
+    MapClick <- Import_V1 %>% 
       filter(latitude == lat, longitude == lon) 
-      return(Io_Data)
-    
+      return(MapClick)
   })
   
   #### END INPUT DATA HANDLING ###
   
-  
-  
-  #### INFORMATION PANEL ####
-  
-  output$table <- renderTable({ 
-    
-    Io_Data <- Io_Map_Click()  
-    write.csv(Io_Data, "Io_Data.csv")
-    head(Io_Data)
-    })
-  #### END INFORMATION PANEL ####
+
   
   
   ##### MAP ####
   output$map <- renderLeaflet({
-    
- # ActionLayers <- LayerSelection()
-  
-#  write.csv(ActionLayers, "ActionLayers2.csv")
-    
+#  req(input$inZoomSelector)
+      
   groups = as.character(unique(ActionSelection()$Action)) 
+
+  
   
   map = leaflet(ActionSelection()) %>%
-    
-  addTiles(group = "OpenStreetMap")
- 
-  #Loop that runs through dataframe to 
+  addTiles(group = "OpenStreetMap") %>%
+  setView(lng = ZoomSelection()$Longitude, lat = ZoomSelection()$Latitude, zoom = ZoomSelection()$Zoom) 
+
+  #Loop that runs through dataframe to create the layers and the icons
    for(g in groups)
    {
-     d = ActionSelection()[ActionSelection()$Action == g, ]
- 
-     map = map %>% addCircleMarkers(data = d, lng = ~longitude, lat = ~latitude,
-                                  color = 277706L,
-                                  group = g)
+     # Makes the map Icon from the googlesheet Marker column 
+    url <- as.character(ActionSelection()$Marker)
+    mapIcon <- makeIcon(
+    iconUrl = url,
+    iconWidth = 64, iconHeight = 64)
+
+    #Instantiates each layer 
+     map = map %>% addMarkers(data = ActionSelection(), lng = ~longitude, lat = ~latitude, icon = mapIcon)
+                                 # color = 277706L,
+                                 # group = g)
      }
-      map %>% addLayersControl(overlayGroups = groups)
+      map %>% addLayersControl()
+     #  Action_v3 <- ActionSelection()
+     # write.csv(Action_v3, "Action_v3.csv")
  })
     
-  
+
   #### END MAP #####
     
-  
-  #### OLD MAP WILL DELETE AFTER HARVESTING CODE ####
-  # output$map <- renderLeaflet({
-  #   
-  # 
-  #   # map extent logic 
-  #   if (is.null(extent$data))
-  #   {
-  #     extent$data$lat <- 41.314902
-  #     extent$data$long <- -82.481357
-  #     extent$data$zoom <- 10
-  #   }
-  #   
-  #   
-  #   #Icons 
-  #   iconTest <- makeIcon(
-  #     iconUrl = "images/logo.svg",
-  #     iconWidth = 40, iconHeight = 95
-  #    # iconAnchorX = 0, iconAnchorY = 0,
-  #   )
-  #   
-  #    iconTest2 <- makeIcon(
-  #      iconUrl = "images/greydrop.png",
-  #      iconWidth = 10, iconHeight = 15
-  #      # iconAnchorX = 0, iconAnchorY = 0,
-  #   )
-  #   
-  #   leaflet(options = leafletOptions(zoomControl = FALSE)) %>%
-  #      htmlwidgets::onRender("function(el, x) {
-  #       L.control.zoom({ position: 'topright' }).addTo(this)
-  #   }") %>%
-  #     
-  #     #Setting default extent and zoom based on user selection. 
-  #     setView(lng = extent$data$long, lat = extent$data$lat, zoom = extent$data$zoom)%>%
-  #     
-  #     #Command to add Circle Markers as layers
-  #     addTiles() %>%
-  # 
-  #     # Adding Satisfactory, Compliance 
-  #     addMarkers(data = map_data_LegAct, lng = ~longitude, lat = ~latitude, icon = iconTest,
-  #                    #  color = map_data_LegAct$MapColor, 
-  #                      label = ~ as.character(map_data_LegAct$Action_Name),
-  #                   #   stroke = FALSE, fillOpacity = 0.5,
-  #                      clusterOptions = markerClusterOptions(removeOutsideVisibleBounds = F),
-  #                      group = "Legal Actions")%>%
-  #     
-  #     # Adding Non Compliance
-  #     addMarkers(data = map_data_PollAct, lng = ~longitude, lat = ~latitude,icon = iconTest2, popup = ~htmlEscape(map_data_PollAct$Volunteers),
-  #                     # color = map_data_PollAct$MapColor, 
-  #                      label = ~ as.character(map_data_PollAct$Action_Name),
-  #                     # stroke = FALSE, fillOpacity = 0.5,
-  #                      clusterOptions = markerClusterOptions(removeOutsideVisibleBounds = F),
-  #                      group = "Pollution Actions")%>%
-  # 
-  #     #Adding Basemap 
-  #     addProviderTiles(providers$CartoDB.Voyager, group = "Streets")%>%
-  #     addProviderTiles(providers$Esri.NatGeoWorldMap, group = "Satellite")%>%
-  # 
-  #     #Adding geocoder
-  #     addSearchOSM(options = searchOptions(zoom=15, position = 'topright',
-  #                                           autoCollapse = TRUE,
-  #                                           minLength = 2)) %>%
-  # 
-  #     #Adding layer control 
-  #     addLayersControl(
-  #       baseGroups = c("Streets", "Satellite"),
-  #       overlayGroups = c("Legal Actions", "Pollution Actions"),
-  #       options = layersControlOptions(collapsed = FALSE, position = 'bottomright')
-  #     )
-  #     
-  #   
-  # })
   
   # TESTING TEXT OUTPUT - WILL BE TURNED INTO POPUP INFORMATION
   
@@ -283,13 +214,14 @@ server <- function(input, output, session) {
     
     if (is.null(input$map_marker_click$lat))  
     {
-      Io_Data <- "Select a Station!"
+      mapClick <- "Select a Station!"
     } 
     else 
     {
-      Io_Data <- Io_Map_Click()
+      mapClick <- MapSelection()
     }
-    paste(Io_Data)
+    
+    paste(mapClick)
     
   }
   )
