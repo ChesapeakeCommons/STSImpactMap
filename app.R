@@ -27,13 +27,8 @@ ui <- fluidPage(
   #Map
   div(id = "wrapper",
       
-      #Zoom Selction 
-      selectizeInput("inZoomSelector", "Zoom Extent",
-                     c("Loading Layers"), multiple = FALSE),
+      uiOutput("Filters"),
       
-      #Layer Selection
-      selectizeInput("inActionSelector", "Choose an Action",
-                     c("Loading Layers"), multiple = TRUE),
 
       div(id = "main-panel",
           leafletOutput("map")
@@ -84,46 +79,86 @@ server <- function(input, output, session) {
   # this lets us bypass the Authorization step from gsheet4 if they are ok with just having the googlesheet be public - I can hook it up to be private though after the fact.
   gs4_deauth()
   
+  Data_Test_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/10VMsQ57EL25gDjb7bAEjOZDI2mEWiOkIoHwHWNW0MOE/edit#gid=0")
   Import_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1_kWe4pEOo7yur9WPMh1YabdCSjoIz-yS37jM6T5_oWw/edit#gid=0")
   ZoomExtent_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1viLwGCnhsdhfgsgIHjYYj6INNu7YqG_h8srlQsCNf6Y/edit#gid=0")
  # Symbology_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1N0L7-gZH4iqxrbQVYLtLJU7Dbuz2nVnYE-8wUrzPK6o/edit#gid=0")
   
   #### END DATASETIMPORT #####
   
+  output$Filters <- renderUI({
+  
+    req(Data_Test_V1)
+    req(ZoomExtent_V1)
+    #Zoom Selction 
+    tagList(
+    selectizeInput("inZoomSelector", "Zoom Extent",
+                   choices = ZoomExtent_V1$Extent, multiple = FALSE),
+    
+    #Action Selection
+    selectizeInput("inActionSelector", "Choose an Action",
+                   choices = Data_Test_V1$Action, multiple = TRUE),
+    
+    #Sub Action Selection
+    selectizeInput("inSubActionSelector", "Choose a Sub Action",
+                   choices = Data_Test_V1$SubAction, multiple = TRUE),
+    )
+  })
+  
+  
+  
+  
+  
   
   #### ACTION INPUT DATA HANDLING ###
   
-  # Updates the Action selector once the input sheets are handled above 
 
-  updateSelectizeInput(session, "inActionSelector",
-                         choices = Import_V1$Action)
   
-  updateSelectizeInput(session, "inZoomSelector",
-                       choices = ZoomExtent_V1$Extent)
+  
+  
+  
+  
+  
+  
+  
   
   # Reactive element that gets the correct Layer Selection and returns "ActionSelection()" for use in mapping from Action Selector
   ActionSelection <- reactive ({
     
     #Converts the input datatype into list --- I think...
-    y <- input$inActionSelector
+    x <- as.character(input$inActionSelector)
+    y <- as.character(input$inSubActionSelector)
     
     # Testing # 
     #write.csv(y, "y.csv")
     
     #Sets dataframe to all Actions if no selection is chosen
-    if (is.null(y))
+    if (is.null(x))
        {
-      Layers <- Import_V1
+      Layers <- Data_Test_V1
       write.csv(Layers, "Layers.csv")
       return(Layers)
     }
-    #Sets dataframe to selected Actions
     else
-      {
-    Layers <- filter(Import_V1, Action %in% y)
+    {
+    Layers <- filter(Data_Test_V1, Action %in% x)  
+    updateSelectizeInput(session, "inSubActionSelector",
+                         choices = Layers$SubAction)
     write.csv(Layers, "Layers.csv")
     return(Layers)
-      }
+    }
+    #Sets dataframe to selected Actions and SubActions
+   #  else
+   #    {
+   #  Layers <- Data_Test_V1 %>%
+   #    filter(Action %in% y) %>%
+   #    filter(SubAction %in% x)
+   #  
+   #  
+   #   
+   # # write.csv(Layers, "Layers.csv")
+   #  return(Layers)
+   #    }
     
   })
   
@@ -161,8 +196,8 @@ server <- function(input, output, session) {
     lon <- input$map_marker_click$lng
     
     # Creating a dataframe that contains the correct results based on user input.
-    MapClick <- Import_V1 %>% 
-      filter(latitude == lat, longitude == lon) 
+    MapClick <- Data_Test_V1 %>% 
+      filter(LAT == lat, LONG == lon) 
       return(MapClick)
   })
   
@@ -193,7 +228,7 @@ server <- function(input, output, session) {
     iconWidth = 64, iconHeight = 64)
 
     #Instantiates each layer 
-     map = map %>% addMarkers(data = ActionSelection(), lng = ~longitude, lat = ~latitude, icon = mapIcon)
+     map = map %>% addMarkers(data = ActionSelection(), lng = ~LONG, lat = ~LAT, icon = mapIcon)
                                  # color = 277706L,
                                  # group = g)
      }
