@@ -18,10 +18,10 @@ library(htmltools)
 
 ###########  UI Display Script ############
 ui <- fluidPage(
-#(theme = "styler.css",
-
-# Test
-           
+  #(theme = "styler.css",
+  
+  # Test
+  
   ### DISPLAY COMPONENTS ###
   
   #Map
@@ -29,47 +29,47 @@ ui <- fluidPage(
       
       uiOutput("Filters"),
       
-
+      
       div(id = "main-panel",
           leafletOutput("map")
-         )
-
+      )
+      
       # Side Panel Display with Save the Sound Info
-      ),
-      div(id = "side-panel",
-         div( id = "side-panel-wrapper",
-              div(  id = "title",
-                    img(    id = 'title-image',
-                            src='images/save-the-sound-title.png'
-                    )
-                    
-                    #Descriptive Text 
-              ),
-              div(  class = "description",
-                    tags$h1("2020 Action Map"),
-                    tags$p("
+  ),
+  div(id = "side-panel",
+      div( id = "side-panel-wrapper",
+           div(  id = "title",
+                 img(    id = 'title-image',
+                         src='images/save-the-sound-title.png'
+                 )
+                 
+                 #Descriptive Text 
+           ),
+           div(  class = "description",
+                 tags$h1("2020 Action Map"),
+                 tags$p("
                         The waters of Long Island Sound
                         touch the lives of millions in
                         New York, Connecticut, and beyond.
                         Together, we can protect this
                         precious natural resource.
                     ")
-              ),
-              div(  class = "description",
-                    tags$h1("200+"),
-                    tags$p(
-                        HTML("<font style='font-weight: 400;'>Efforts to improve the</font> Long Island Sound")
-                   )
-                   
-                   # Zoom Controls 
-              ),
-              div(  id = "action-panel",
-
-                     textOutput("mapclick")
-              )
-         )
+           ),
+           div(  class = "description",
+                 tags$h1("200+"),
+                 tags$p(
+                   HTML("<font style='font-weight: 400;'>Efforts to improve the</font> Long Island Sound")
+                 )
+                 
+                 # Zoom Controls 
+           ),
+           div(  id = "action-panel",
+                 
+                 textOutput("mapclick")
+           )
       )
-   )
+  )
+)
 
 ########## Server Side Script ############
 
@@ -82,26 +82,26 @@ server <- function(input, output, session) {
   Data_Test_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/10VMsQ57EL25gDjb7bAEjOZDI2mEWiOkIoHwHWNW0MOE/edit#gid=0")
   Import_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1_kWe4pEOo7yur9WPMh1YabdCSjoIz-yS37jM6T5_oWw/edit#gid=0")
   ZoomExtent_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1viLwGCnhsdhfgsgIHjYYj6INNu7YqG_h8srlQsCNf6Y/edit#gid=0")
- # Symbology_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1N0L7-gZH4iqxrbQVYLtLJU7Dbuz2nVnYE-8wUrzPK6o/edit#gid=0")
+  # Symbology_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1N0L7-gZH4iqxrbQVYLtLJU7Dbuz2nVnYE-8wUrzPK6o/edit#gid=0")
   
   #### END DATASETIMPORT #####
   
   output$Filters <- renderUI({
-  
+    
     req(Data_Test_V1)
     req(ZoomExtent_V1)
     #Zoom Selction 
     tagList(
-    selectizeInput("inZoomSelector", "Zoom Extent",
-                   choices = ZoomExtent_V1$Extent, multiple = FALSE),
-    
-    #Action Selection
-    selectizeInput("inActionSelector", "Choose an Action",
-                   choices = Data_Test_V1$Action, multiple = TRUE),
-    
-    #Sub Action Selection
-    selectizeInput("inSubActionSelector", "Choose a Sub Action",
-                   choices = Data_Test_V1$SubAction, multiple = TRUE),
+      selectizeInput("inZoomSelector", "Zoom Extent",
+                     choices = ZoomExtent_V1$Extent, multiple = FALSE),
+      
+      #Action Selection
+      selectizeInput("inActionSelector", "Choose an Action",
+                     choices = Data_Test_V1$Action, multiple = TRUE),
+      
+      #Sub Action Selection
+      selectizeInput("inSubActionSelector", "Choose a Sub Action",
+                     choices = Data_Test_V1$SubAction, multiple = TRUE),
     )
   })
   
@@ -112,7 +112,7 @@ server <- function(input, output, session) {
   
   #### ACTION INPUT DATA HANDLING ###
   
-
+  
   
   
   
@@ -128,37 +128,43 @@ server <- function(input, output, session) {
     #Converts the input datatype into list --- I think...
     x <- as.character(input$inActionSelector)
     y <- as.character(input$inSubActionSelector)
-    
+     
     # Testing # 
     #write.csv(y, "y.csv")
     
     #Sets dataframe to all Actions if no selection is chosen
-    if (is.null(x))
-       {
+    if (length(x) == 0)
+    {
       Layers <- Data_Test_V1
       write.csv(Layers, "Layers.csv")
+      print(x)
+      print(y)
+      updateSelectizeInput(session, "inSubActionSelector",
+                           choices = Layers$SubAction)
       return(Layers)
     }
-    else
+    if (length(x) > 0 && length(y) == 0)
     {
-    Layers <- filter(Data_Test_V1, Action %in% x)  
-    updateSelectizeInput(session, "inSubActionSelector",
-                         choices = Layers$SubAction)
-    write.csv(Layers, "Layers.csv")
-    return(Layers)
+      Layers <- filter(Data_Test_V1, Action %in% x)  
+      updateSelectizeInput(session, "inSubActionSelector",
+                           choices = Layers$SubAction)
+      write.csv(Layers, "Layers.csv")
+      print(x)
+      print(y)
+      return(Layers)
     }
-    #Sets dataframe to selected Actions and SubActions
-   #  else
-   #    {
-   #  Layers <- Data_Test_V1 %>%
-   #    filter(Action %in% y) %>%
-   #    filter(SubAction %in% x)
-   #  
-   #  
-   #   
-   # # write.csv(Layers, "Layers.csv")
-   #  return(Layers)
-   #    }
+    if (length(x) > 0 && length(y) > 0)
+    {
+      Layers <- filter(Data_Test_V1, Action %in% x)
+      Layers <- filter(Layers, SubAction %in% y)
+      #updateSelectizeInput(session, "inSubActionSelector",
+                          # choices = Layers$SubAction)
+      write.csv(Layers, "Layers.csv")
+      print(x)
+      print(y)
+      print("test")
+      return(Layers)
+    }
     
   })
   
@@ -174,17 +180,17 @@ server <- function(input, output, session) {
     print(x)
     # Testing write.csv(x, "x.csv")
     if (x == "Loading Layers")
-      {
+    {
       ZoomChoice <- ZoomExtent_V1 %>%
-      filter(Extent == "Whole Region")
-  #  write.csv(ZoomChoice, "Zoom12345.csv")
-      }
+        filter(Extent == "Whole Region")
+      #  write.csv(ZoomChoice, "Zoom12345.csv")
+    }
     else
-      {
-       ZoomChoice <- 
-       filter(ZoomExtent_V1, Extent %in% x)
-       write.csv(ZoomChoice, "Zoom12345.csv")
-      }
+    {
+      ZoomChoice <- 
+        filter(ZoomExtent_V1, Extent %in% x)
+      write.csv(ZoomChoice, "Zoom12345.csv")
+    }
     return(ZoomChoice)
   })
   
@@ -198,48 +204,48 @@ server <- function(input, output, session) {
     # Creating a dataframe that contains the correct results based on user input.
     MapClick <- Data_Test_V1 %>% 
       filter(LAT == lat, LONG == lon) 
-      return(MapClick)
+    return(MapClick)
   })
   
   #### END INPUT DATA HANDLING ###
   
-
+  
   
   
   ##### MAP ####
   output$map <- renderLeaflet({
-#  req(input$inZoomSelector)
+    #  req(input$inZoomSelector)
+    
+    groups = as.character(unique(ActionSelection()$Action)) 
+    
+    
+    
+    map = leaflet(ActionSelection()) %>%
+      addTiles(group = "OpenStreetMap") %>%
+      setView(lng = ZoomSelection()$Longitude, lat = ZoomSelection()$Latitude, zoom = ZoomSelection()$Zoom) 
+    
+    #Loop that runs through dataframe to create the layers and the icons
+    for(g in groups)
+    {
+      # Makes the map Icon from the googlesheet Marker column 
+      url <- as.character(ActionSelection()$Marker)
+      mapIcon <- makeIcon(
+        iconUrl = url,
+        iconWidth = 64, iconHeight = 64)
       
-  groups = as.character(unique(ActionSelection()$Action)) 
-
+      #Instantiates each layer 
+      map = map %>% addMarkers(data = ActionSelection(), lng = ~LONG, lat = ~LAT, icon = mapIcon)
+      # color = 277706L,
+      # group = g)
+    }
+    map %>% addLayersControl()
+    #  Action_v3 <- ActionSelection()
+    # write.csv(Action_v3, "Action_v3.csv")
+  })
   
   
-  map = leaflet(ActionSelection()) %>%
-  addTiles(group = "OpenStreetMap") %>%
-  setView(lng = ZoomSelection()$Longitude, lat = ZoomSelection()$Latitude, zoom = ZoomSelection()$Zoom) 
-
-  #Loop that runs through dataframe to create the layers and the icons
-   for(g in groups)
-   {
-     # Makes the map Icon from the googlesheet Marker column 
-    url <- as.character(ActionSelection()$Marker)
-    mapIcon <- makeIcon(
-    iconUrl = url,
-    iconWidth = 64, iconHeight = 64)
-
-    #Instantiates each layer 
-     map = map %>% addMarkers(data = ActionSelection(), lng = ~LONG, lat = ~LAT, icon = mapIcon)
-                                 # color = 277706L,
-                                 # group = g)
-     }
-      map %>% addLayersControl()
-     #  Action_v3 <- ActionSelection()
-     # write.csv(Action_v3, "Action_v3.csv")
- })
-    
-
   #### END MAP #####
-    
+  
   
   # TESTING TEXT OUTPUT - WILL BE TURNED INTO POPUP INFORMATION
   
