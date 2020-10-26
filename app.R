@@ -1,4 +1,4 @@
-# Save the Sound's 2020 ActiaddKML()
+# Save the Sound's 2020 Action Map
 # Documentation https://docs.google.com/document/d/14kDLOjaSYhNqzDJXG9Zn2SWk5T-k_RPIiF2jXS9h_zA/edit?usp=sharing
 # Github: https://github.com/ChesapeakeCommons/R-Shiny
 # Created by Gabe Watson for The Commons 
@@ -32,7 +32,7 @@ ui <- fluidPage(
       
       
       div(id = "main-panel",
-          leafletOutput("map")
+          leafletOutput("leafmap")
       )
       
       # Side Panel Display with Save the Sound Info
@@ -137,7 +137,7 @@ server <- function(input, output, session) {
       
       
       selectizeInput("inYearSelector", "Filter by Year:",
-                     choices = Data_Test_V2$Year, multiple = TRUE, options = list(placeholder = 'All Years')),
+                     choices = Data_Test_V2$Year, multiple = TRUE, selected = 2020),
       
       
       selectizeInput("inZoomSelector", "Zoom to:",
@@ -279,77 +279,66 @@ server <- function(input, output, session) {
     return(ZoomChoice)
   })
   
-  
-  # #Gets the latlong from user click and creates variable of Dataframe
-  # MapSelection <- reactive({
-  #   # Gets the latlongs from the leaflet mapclick 
-  #   lat <- input$map_marker_click$lat
-  #   lon <- input$map_marker_click$lng
-  #   
-  #   # Creating a dataframe that contains the correct results based on user input.
-  #   MapClick <- Data_Test_V2 %>% 
-  #     filter(LAT == lat, LONG == lon) 
-  #   return(MapClick)
-  # })
-  
   #### END INPUT DATA HANDLING ###
   
   
   
   
   ##### MAP ####
-  output$map <- renderLeaflet({
-    #  req(input$inZoomSelector)
-    
-    groups = as.character(unique(ActionSelection()$Action)) 
-    
-    
-    
-    map = leaflet(ActionSelection()) %>%
-      addTiles(group = "OpenStreetMap") %>%
-      setView(lng = ZoomSelection()$Longitude, lat = ZoomSelection()$Latitude, zoom = ZoomSelection()$Zoom) 
-    
-    #Loop that runs through dataframe to create the layers and the icons
-    for(g in groups)
-    {
-      # Makes the map Icon from the googlesheet Marker column 
-      url <- as.character(ActionSelection()$Marker)
-      mapIcon <- makeIcon(
-        iconUrl = url,
-        iconWidth = 64, iconHeight = 64)
-      
-      PopupImage <- ActionSelection()$Image
-        #'https://lh6.googleusercontent.com/ioN_TcNlwaqrt_7bT8deJHqFecCAb6SxTmVVXgayy8C90cnEZeTWjvEN6xRFyVnmFARMlReS0e8liki_QaCeoONEao_W8d0qLAdG7crFCSlYU77JW68Tuj-zDI2DqdDTD-bVYALHrw'
-    # Boat <- readOGR("www/STS_Boat.kml")
-                             
-      #Instantiates each layer 
-      map = map %>% addMarkers(data = ActionSelection(), 
-                               lng = ~LONG, lat = ~LAT, 
-                               icon = mapIcon, 
-                               label = ActionSelection()$ProjectName,
-                               clusterOptions = markerClusterOptions(removeOutsideVisibleBounds = F),
-                               popup = paste("Action: ", ActionSelection()$Action, "<br>",
-                                             "Year Started: ", ActionSelection()$Year, "<br>",
-                                             "Sub Action: ", ActionSelection()$SubAction, "<br>",
-                                             "Project Name: ", ActionSelection()$ProjectName, "<br>",
-                                             "Lat: ", ActionSelection()$LAT, "Long: ", ActionSelection()$LONG, "<br>",
-                                             ActionSelection()$KeyMetric1,"- ", ActionSelection()$Value1, "<br>",
-                                             ActionSelection()$ShortDescription))# %>%
-                             #  addKML(Boat)
-                                
-                                           #  "<img src = ", PopupImage, ">"))                                                                                
-    }
-    map %>% addLayersControl(options = layersControlOptions(collapsed = FALSE))
+  #This creates the original drawing of the map
+  output$leafmap <- renderLeaflet({
+     leaflet() %>%
+       addProviderTiles("CartoDB.VoyagerLabelsUnder") %>%
+        setView(lng = 41, lat = -72, zoom = 9)
   })
   
+#This updates the map based on the changes in the selected data such that the map doesn't need to redraw every time
+  observeEvent(ActionSelection(),{
+  #  req(ZoomSelection())
+    #Creating Map Markers 
+    url <- as.character(ActionSelection()$Marker)
+    mapIcon <- makeIcon(
+      iconUrl = url,
+      iconWidth = 64, iconHeight = 64)
+
+      #Popup Image
+      PopupImage <- ActionSelection()$Image
+
+      
+ leafletProxy("leafmap") %>%
+      clearMarkers()%>%
+      clearMarkerClusters()%>%
+      addProviderTiles("CartoDB.VoyagerLabelsUnder")%>%
+      addMarkers(data = ActionSelection(),
+                 lng = ~LONG, lat = ~LAT,
+            #    icon = mapIcon,
+                 label = ActionSelection()$ProjectName,
+            
+                 clusterOptions = markerClusterOptions(showCoverageOnHover = TRUE,
+                                  zoomToBoundsOnClick = TRUE, spiderfyOnMaxZoom = 5,
+                                  removeOutsideVisibleBounds = TRUE,
+                                  spiderLegPolylineOptions = list(weight = 5, length = 10000, color = "#222", opacity = 0.5), freezeAtZoom = TRUE),
+            
+                 popup = paste("Action: ", ActionSelection()$Action, "<br>",
+                         "Year Started: ", ActionSelection()$Year, "<br>",
+                         "Year Completed: ", ActionSelection()$YearComplete, "<br>",
+                         "Status: ", ActionSelection()$Status, "<br>",
+                         "Sub Action: ", ActionSelection()$SubAction, "<br>",
+                         "Project Name: ", ActionSelection()$ProjectName, "<br>",
+                         "Lat: ", ActionSelection()$LAT, "Long: ", ActionSelection()$LONG, "<br>",
+                          ActionSelection()$KeyMetric1,"- ", ActionSelection()$Value1, "<br>",
+                          ActionSelection()$ShortDescription))
+})
+  
+  observeEvent(ZoomSelection(), {
+          leafletProxy("leafmap")%>%
+          setView(lng = ZoomSelection()$Longitude, lat = ZoomSelection()$Latitude, zoom = ZoomSelection()$Zoom)
+        
+         })
   
   #### END MAP #####
   
-  
-  # TESTING TEXT OUTPUT - WILL BE TURNED INTO POPUP INFORMATION
-  
-  
-  #### END MAP ###
+
 }
 
 # Run the application 
