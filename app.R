@@ -17,6 +17,10 @@ library(leaflet.extras)
 library(htmltools)
 library(rgdal)
 library(remotes)
+library(jsonlite)
+library(rjson)
+library(geojsonR)
+library(sp)
 ###########  UI Display Script ############
 ui <- fluidPage(
   #(theme = "styler.css",
@@ -72,7 +76,7 @@ server <- function(input, output, session) {
   ##### DATASET IMPORT ####
   # this lets us bypass the Authorization step from gsheet4 if they are ok with just having the googlesheet be public - I can hook it up to be private though after the fact.
   gs4_deauth()
-  tryCatch(Data_Test_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/10VMsQ57EL25gDjb7bAEjOZDI2mEWiOkIoHwHWNW0MOE/edit#gid=0"))
+  (Data_Test_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/10VMsQ57EL25gDjb7bAEjOZDI2mEWiOkIoHwHWNW0MOE/edit#gid=0"))
  # Import_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1_kWe4pEOo7yur9WPMh1YabdCSjoIz-yS37jM6T5_oWw/edit#gid=0")
   ZoomExtent_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1viLwGCnhsdhfgsgIHjYYj6INNu7YqG_h8srlQsCNf6Y/edit#gid=0")
   # Symbology_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1N0L7-gZH4iqxrbQVYLtLJU7Dbuz2nVnYE-8wUrzPK6o/edit#gid=0")
@@ -261,26 +265,40 @@ server <- function(input, output, session) {
   #### END INPUT DATA HANDLING ###
   
   
+ #  geojson <- reactive({
+   # STS_Boat_Raw <- system.file("www/STS_Boat.kml", package = "leaflet.extras")
+    #STS_Boat_Kml <- readr::read_file(STS_Boat_Raw)
   
+  STS_Boat <- rgdal::readOGR("www/STS_Boat_v5.geojson")
+
+ #  })
   
   ##### MAP ####
   #This creates the original drawing of the map, observeEvents below update only the dataframe and zoom extent such that the map does not completely re render
   output$leafmap <- renderLeaflet({
+
+    
      leaflet() %>%
-       addProviderTiles("CartoDB.VoyagerLabelsUnder") %>%
+       addPolygons(data = STS_Boat, fill = FALSE, weight = 2, dashArray = "3", color = "grey") %>%
+       addProviderTiles("CartoDB.VoyagerLabelsUnder", group = "Streets") %>%
+       addProviderTiles("Esri.WorldTopoMap", group = "Terrain")%>%
+       addProviderTiles("GeoportailFrance.orthos", group = "Satellite")%>%
+       addLayersControl(baseGroups = c("Streets", "Terrain", "Satellite"),
+                        options = layersControlOptions(collapsed = FALSE))%>%
        setView(lng = 41, lat = -72, zoom = 8)
   })
   
 #This updates the map based on the changes in the selected data such that the map doesn't need to redraw every time
   observeEvent(ActionSelection(),
     {
+
     
     #Creating Map Markers with URL (Will likely store this information in an Action only sheet and then join to layers in program after data importing)
     url <- as.character(ActionSelection()$Marker)
     
     mapIcon <- makeIcon(
       iconUrl = url,
-      iconWidth = 64, iconHeight = 64)
+      iconWidth = 100, iconHeight = 64)
 
       # Creating Popup Image
       PopupImage <- ActionSelection()$Image
@@ -290,11 +308,11 @@ server <- function(input, output, session) {
       #Clears markers and marker clusters for re render
         clearMarkers()%>%
         clearMarkerClusters()%>%
-        addProviderTiles("CartoDB.VoyagerLabelsUnder")%>%
+       # addProviderTiles("CartoDB.VoyagerLabelsUnder")%>%
         #Adding Markers, Clusters, and Popups 
         addMarkers(data = ActionSelection(),
                  lng = ~LONG, lat = ~LAT,
-            #    icon = mapIcon,
+                icon = mapIcon,
                 #Label
                  label = ActionSelection()$ProjectName,
                 #Marker Cluster Options
@@ -313,7 +331,8 @@ server <- function(input, output, session) {
                          "Project Name: ", ActionSelection()$ProjectName, "<br>",
                          "Lat: ", ActionSelection()$LAT, "Long: ", ActionSelection()$LONG, "<br>",
                           ActionSelection()$KeyMetric1,"- ", ActionSelection()$Value1, "<br>",
-                          ActionSelection()$ShortDescription))
+                          ActionSelection()$ShortDescription)) 
+                          
       })
   
   #Updates Zoom selection without updating entire map 
