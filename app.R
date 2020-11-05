@@ -18,17 +18,14 @@ library(htmltools)
 library(rgdal)
 library(remotes)
 ###########  UI Display Script ############
-ui <- fluidPage(
-  #(theme = "styler.css",
-  
+ui <- fluidPage(theme = "styler.css",
+
   
   ### DISPLAY COMPONENTS ###
 
   div(id = "wrapper",
       
-      #Filter output block - see output$Filters for rendering code
-      uiOutput("Filters"),
-      
+    
       #Map
       div(id = "main-panel",
           leafletOutput("leafmap")
@@ -60,7 +57,10 @@ ui <- fluidPage(
                  tags$p(
                    HTML("<font style='font-weight: 400;'>Efforts to improve the</font> Long Island Sound")
                  )
-           )
+           ),
+           #Filter output block - see output$Filters for rendering code
+           uiOutput("Filters")
+           
       )
   )
 )
@@ -125,6 +125,7 @@ server <- function(input, output, session) {
     req(Data_Test_V2)
     req(ZoomExtent_V1)
     #Zoom Selction 
+  #  div(id = "side-panel",
     tagList(
       #Action Selection
       selectizeInput("inActionSelector", "Filter by Action:",
@@ -142,6 +143,7 @@ server <- function(input, output, session) {
       selectizeInput("inZoomSelector", "Zoom to:",
                      choices = ZoomExtent_V1$Extent, multiple = FALSE)
     )
+ #   )
   })
   
   #### ACTION INPUT DATA HANDLING ###
@@ -268,20 +270,34 @@ server <- function(input, output, session) {
   output$leafmap <- renderLeaflet({
      leaflet() %>%
        addProviderTiles("CartoDB.VoyagerLabelsUnder") %>%
-       setView(lng = 41, lat = -72, zoom = 8)
+       setView(lng = 41, lat = -72, zoom = 8)%>%
+      
+      #Adding layer control 
+      addLayersControl(
+        baseGroups = c("Streets", "Satellite"),
+       # overlayGroups = c("Legal Actions", "Pollution Actions"),
+        options = layersControlOptions(collapsed = FALSE, position = 'bottomright')
+      )%>%
+      #Adding Search service
+      addSearchOSM(options = searchOptions(zoom=15, position = 'topright',
+                                         autoCollapse = TRUE,
+                                         minLength = 2))
+      
   })
-  
+  #Adding geocoder
+ 
 #This updates the map based on the changes in the selected data such that the map doesn't need to redraw every time
   observeEvent(ActionSelection(),
     {
     
     #Creating Map Markers with URL (Will likely store this information in an Action only sheet and then join to layers in program after data importing)
     url <- as.character(ActionSelection()$Marker)
-    
+    print(url)
     mapIcon <- makeIcon(
       iconUrl = url,
-      iconWidth = 64, iconHeight = 64)
-
+    #   iconUrl = 'https://docs.google.com/spreadsheets/d/1pZBhwo97IHkp-bNCA-m9UBJyBsO9ngnyuFylfAMbZs4/edit#gid=0&range=G2',
+    #  iconUrl = 'http://127.0.0.1:3470/images/icons/icon_pollution.png',
+      iconWidth = 32, iconHeight = 32)
       # Creating Popup Image
       PopupImage <- ActionSelection()$Image
       
@@ -291,10 +307,11 @@ server <- function(input, output, session) {
         clearMarkers()%>%
         clearMarkerClusters()%>%
         addProviderTiles("CartoDB.VoyagerLabelsUnder")%>%
+       
         #Adding Markers, Clusters, and Popups 
         addMarkers(data = ActionSelection(),
                  lng = ~LONG, lat = ~LAT,
-            #    icon = mapIcon,
+                icon = mapIcon,
                 #Label
                  label = ActionSelection()$ProjectName,
                 #Marker Cluster Options
@@ -305,16 +322,37 @@ server <- function(input, output, session) {
                                   spiderLegPolylineOptions = list(weight = 5, color = "#222", opacity = 0.5), 
                                   freezeAtZoom = TRUE),
                  #Popup Code
-                 popup = paste("Action: ", ActionSelection()$Action, "<br>",
-                         "Year Started: ", ActionSelection()$Year, "<br>",
-                         "Year Completed: ", ActionSelection()$YearComplete, "<br>",
-                         "Status: ", ActionSelection()$Status, "<br>",
-                         "Sub Action: ", ActionSelection()$SubAction, "<br>",
-                         "Project Name: ", ActionSelection()$ProjectName, "<br>",
-                         "Lat: ", ActionSelection()$LAT, "Long: ", ActionSelection()$LONG, "<br>",
-                          ActionSelection()$KeyMetric1,"- ", ActionSelection()$Value1, "<br>",
-                          ActionSelection()$ShortDescription))
+                 popup = paste(
+                      "<div class='popup-wrapper'>",
+                        "<div class='popup-image' style='border: 1px solid red;",
+                              "background-image: url(\"",ActionSelection()$Image,"\")'>",
+                         # "<img class='pu-img' src='", ActionSelection()$Image ,"'>",
+                        "</div>",
+                        "<div class='popup-text'>",
+                          "<div class='popup-title'>",
+                            "<div class='popup-title-marker' style='background-image:url(\"",ActionSelection()$Marker,"\")'>",
+                            "</div>",
+                            "<div class='popup-title-text'>",
+                              "<span style='width: 70%; float:left; display:block; font-size: 18px; font-weight: bold;'>", ActionSelection()$Action, "</span>",
+                              "<span style='width: 70%; float:left; display:block; font-size: 14px; font-weight: bold; color:",ActionSelection()$Color,";'>", ActionSelection()$SubAction,"</span>",
+                            "</div>",
+                          "</div>",
+                           "<span>Project: ", ActionSelection()$ProjectName,"</span><br>",
+                           "Year Started: ", ActionSelection()$Year, "<br>",
+                           "Year Completed: ", ActionSelection()$YearComplete, "<br>",
+                           "Status: ", ActionSelection()$Status, "<br>",
+                           
+                          
+                           "Lat: ", ActionSelection()$LAT, "Long: ", ActionSelection()$LONG, "<br>",
+                            ActionSelection()$KeyMetric1,"- ", ActionSelection()$Value1, "<br>",
+                            ActionSelection()$ShortDescription,
+                          "</div>",
+                        "</div>"
+                        )
+                )
       })
+  
+
   
   #Updates Zoom selection without updating entire map 
   observeEvent(ZoomSelection(), 
