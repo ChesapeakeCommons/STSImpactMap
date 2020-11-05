@@ -17,15 +17,22 @@ library(leaflet.extras)
 library(htmltools)
 library(rgdal)
 library(remotes)
+library(jsonlite)
+library(rjson)
+library(geojsonR)
+library(sp)
 ###########  UI Display Script ############
-ui <- fluidPage(theme = "styler.css",
-
+ui <- fluidPage(
+  #(theme = "styler.css",
+  
   
   ### DISPLAY COMPONENTS ###
 
   div(id = "wrapper",
       
-    
+      #Filter output block - see output$Filters for rendering code
+      uiOutput("Filters"),
+      
       #Map
       div(id = "main-panel",
           leafletOutput("leafmap")
@@ -57,10 +64,7 @@ ui <- fluidPage(theme = "styler.css",
                  tags$p(
                    HTML("<font style='font-weight: 400;'>Efforts to improve the</font> Long Island Sound")
                  )
-           ),
-           #Filter output block - see output$Filters for rendering code
-           uiOutput("Filters")
-           
+           )
       )
   )
 )
@@ -72,7 +76,7 @@ server <- function(input, output, session) {
   ##### DATASET IMPORT ####
   # this lets us bypass the Authorization step from gsheet4 if they are ok with just having the googlesheet be public - I can hook it up to be private though after the fact.
   gs4_deauth()
-  tryCatch(Data_Test_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/10VMsQ57EL25gDjb7bAEjOZDI2mEWiOkIoHwHWNW0MOE/edit#gid=0"))
+  (Data_Test_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/10VMsQ57EL25gDjb7bAEjOZDI2mEWiOkIoHwHWNW0MOE/edit#gid=0"))
  # Import_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1_kWe4pEOo7yur9WPMh1YabdCSjoIz-yS37jM6T5_oWw/edit#gid=0")
   ZoomExtent_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1viLwGCnhsdhfgsgIHjYYj6INNu7YqG_h8srlQsCNf6Y/edit#gid=0")
   # Symbology_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1N0L7-gZH4iqxrbQVYLtLJU7Dbuz2nVnYE-8wUrzPK6o/edit#gid=0")
@@ -125,7 +129,6 @@ server <- function(input, output, session) {
     req(Data_Test_V2)
     req(ZoomExtent_V1)
     #Zoom Selction 
-  #  div(id = "side-panel",
     tagList(
       #Action Selection
       selectizeInput("inActionSelector", "Filter by Action:",
@@ -143,7 +146,6 @@ server <- function(input, output, session) {
       selectizeInput("inZoomSelector", "Zoom to:",
                      choices = ZoomExtent_V1$Extent, multiple = FALSE)
     )
- #   )
   })
   
   #### ACTION INPUT DATA HANDLING ###
@@ -263,41 +265,41 @@ server <- function(input, output, session) {
   #### END INPUT DATA HANDLING ###
   
   
+ #  geojson <- reactive({
+   # STS_Boat_Raw <- system.file("www/STS_Boat.kml", package = "leaflet.extras")
+    #STS_Boat_Kml <- readr::read_file(STS_Boat_Raw)
   
+  STS_Boat <- rgdal::readOGR("www/STS_Boat_v5.geojson")
+
+ #  })
   
   ##### MAP ####
   #This creates the original drawing of the map, observeEvents below update only the dataframe and zoom extent such that the map does not completely re render
   output$leafmap <- renderLeaflet({
+
+    
      leaflet() %>%
-       addProviderTiles("CartoDB.VoyagerLabelsUnder") %>%
-       setView(lng = 41, lat = -72, zoom = 8)%>%
-      
-      #Adding layer control 
-      addLayersControl(
-        baseGroups = c("Streets", "Satellite"),
-       # overlayGroups = c("Legal Actions", "Pollution Actions"),
-        options = layersControlOptions(collapsed = FALSE, position = 'bottomright')
-      )%>%
-      #Adding Search service
-      addSearchOSM(options = searchOptions(zoom=15, position = 'topright',
-                                         autoCollapse = TRUE,
-                                         minLength = 2))
-      
+       addPolygons(data = STS_Boat, fill = FALSE, weight = 2, dashArray = "3", color = "grey") %>%
+       addProviderTiles("CartoDB.VoyagerLabelsUnder", group = "Streets") %>%
+       addProviderTiles("Esri.WorldTopoMap", group = "Terrain")%>%
+       addProviderTiles("GeoportailFrance.orthos", group = "Satellite")%>%
+       addLayersControl(baseGroups = c("Streets", "Terrain", "Satellite"),
+                        options = layersControlOptions(collapsed = FALSE))%>%
+       setView(lng = 41, lat = -72, zoom = 8)
   })
-  #Adding geocoder
- 
+  
 #This updates the map based on the changes in the selected data such that the map doesn't need to redraw every time
   observeEvent(ActionSelection(),
     {
+
     
     #Creating Map Markers with URL (Will likely store this information in an Action only sheet and then join to layers in program after data importing)
     url <- as.character(ActionSelection()$Marker)
-    print(url)
+    
     mapIcon <- makeIcon(
       iconUrl = url,
-    #   iconUrl = 'https://docs.google.com/spreadsheets/d/1pZBhwo97IHkp-bNCA-m9UBJyBsO9ngnyuFylfAMbZs4/edit#gid=0&range=G2',
-    #  iconUrl = 'http://127.0.0.1:3470/images/icons/icon_pollution.png',
-      iconWidth = 32, iconHeight = 32)
+      iconWidth = 100, iconHeight = 64)
+
       # Creating Popup Image
       PopupImage <- ActionSelection()$Image
       
@@ -306,8 +308,7 @@ server <- function(input, output, session) {
       #Clears markers and marker clusters for re render
         clearMarkers()%>%
         clearMarkerClusters()%>%
-        addProviderTiles("CartoDB.VoyagerLabelsUnder")%>%
-       
+       # addProviderTiles("CartoDB.VoyagerLabelsUnder")%>%
         #Adding Markers, Clusters, and Popups 
         addMarkers(data = ActionSelection(),
                  lng = ~LONG, lat = ~LAT,
@@ -322,37 +323,17 @@ server <- function(input, output, session) {
                                   spiderLegPolylineOptions = list(weight = 5, color = "#222", opacity = 0.5), 
                                   freezeAtZoom = TRUE),
                  #Popup Code
-                 popup = paste(
-                      "<div class='popup-wrapper'>",
-                        "<div class='popup-image' style='border: 1px solid red;",
-                              "background-image: url(\"",ActionSelection()$Image,"\")'>",
-                         # "<img class='pu-img' src='", ActionSelection()$Image ,"'>",
-                        "</div>",
-                        "<div class='popup-text'>",
-                          "<div class='popup-title'>",
-                            "<div class='popup-title-marker' style='background-image:url(\"",ActionSelection()$Marker,"\")'>",
-                            "</div>",
-                            "<div class='popup-title-text'>",
-                              "<span style='width: 70%; float:left; display:block; font-size: 18px; font-weight: bold;'>", ActionSelection()$Action, "</span>",
-                              "<span style='width: 70%; float:left; display:block; font-size: 14px; font-weight: bold; color:",ActionSelection()$Color,";'>", ActionSelection()$SubAction,"</span>",
-                            "</div>",
-                          "</div>",
-                           "<span>Project: ", ActionSelection()$ProjectName,"</span><br>",
-                           "Year Started: ", ActionSelection()$Year, "<br>",
-                           "Year Completed: ", ActionSelection()$YearComplete, "<br>",
-                           "Status: ", ActionSelection()$Status, "<br>",
-                           
+                 popup = paste("Action: ", ActionSelection()$Action, "<br>",
+                         "Year Started: ", ActionSelection()$Year, "<br>",
+                         "Year Completed: ", ActionSelection()$YearComplete, "<br>",
+                         "Status: ", ActionSelection()$Status, "<br>",
+                         "Sub Action: ", ActionSelection()$SubAction, "<br>",
+                         "Project Name: ", ActionSelection()$ProjectName, "<br>",
+                         "Lat: ", ActionSelection()$LAT, "Long: ", ActionSelection()$LONG, "<br>",
+                          ActionSelection()$KeyMetric1,"- ", ActionSelection()$Value1, "<br>",
+                          ActionSelection()$ShortDescription)) 
                           
-                           "Lat: ", ActionSelection()$LAT, "Long: ", ActionSelection()$LONG, "<br>",
-                            ActionSelection()$KeyMetric1,"- ", ActionSelection()$Value1, "<br>",
-                            ActionSelection()$ShortDescription,
-                          "</div>",
-                        "</div>"
-                        )
-                )
       })
-  
-
   
   #Updates Zoom selection without updating entire map 
   observeEvent(ZoomSelection(), 
