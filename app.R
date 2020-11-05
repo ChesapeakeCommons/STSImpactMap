@@ -22,7 +22,7 @@ library(rjson)
 library(geojsonR)
 library(sp)
 ###########  UI Display Script ############
-ui <- fluidPage(
+ui <- fluidPage(theme = "styler.css",
   #(theme = "styler.css",
   
   
@@ -64,11 +64,13 @@ ui <- fluidPage(
                  tags$p(
                    HTML("<font style='font-weight: 400;'>Efforts to improve the</font> Long Island Sound")
                  )
-           )
+           ),
+           #Filter output block - see output$Filters for rendering code
+           uiOutput("Filters")
+           
       )
   )
 )
-
 ########## Server Side Script ############
 
 server <- function(input, output, session) {
@@ -285,7 +287,11 @@ server <- function(input, output, session) {
        addProviderTiles("GeoportailFrance.orthos", group = "Satellite")%>%
        addLayersControl(baseGroups = c("Streets", "Terrain", "Satellite"),
                         options = layersControlOptions(collapsed = FALSE))%>%
-       setView(lng = 41, lat = -72, zoom = 8)
+       setView(lng = 41, lat = -72, zoom = 8)%>%
+      #Adding Search service
+      addSearchOSM(options = searchOptions(zoom=15, position = 'topright',
+                                           autoCollapse = TRUE,
+                                           minLength = 2))
   })
   
 #This updates the map based on the changes in the selected data such that the map doesn't need to redraw every time
@@ -322,18 +328,37 @@ server <- function(input, output, session) {
                                   removeOutsideVisibleBounds = TRUE,
                                   spiderLegPolylineOptions = list(weight = 5, color = "#222", opacity = 0.5), 
                                   freezeAtZoom = TRUE),
-                 #Popup Code
-                 popup = paste("Action: ", ActionSelection()$Action, "<br>",
-                         "Year Started: ", ActionSelection()$Year, "<br>",
-                         "Year Completed: ", ActionSelection()$YearComplete, "<br>",
-                         "Status: ", ActionSelection()$Status, "<br>",
-                         "Sub Action: ", ActionSelection()$SubAction, "<br>",
-                         "Project Name: ", ActionSelection()$ProjectName, "<br>",
-                         "Lat: ", ActionSelection()$LAT, "Long: ", ActionSelection()$LONG, "<br>",
-                          ActionSelection()$KeyMetric1,"- ", ActionSelection()$Value1, "<br>",
-                          ActionSelection()$ShortDescription)) 
-                          
-      })
+                #Popup Code
+                popup = paste(
+                  "<div class='popup-wrapper'>",
+                  "<div class='popup-image' style='border: 1px solid red;",
+                  "background-image: url(\"",ActionSelection()$Image,"\")'>",
+                  # "<img class='pu-img' src='", ActionSelection()$Image ,"'>",
+                  "</div>",
+                  "<div class='popup-text'>",
+                  "<div class='popup-title'>",
+                  "<div class='popup-title-marker' style='background-image:url(\"",ActionSelection()$Marker,"\")'>",
+                  "</div>",
+                  "<div class='popup-title-text'>",
+                  "<span style='width: 70%; float:left; display:block; font-size: 18px; font-weight: bold;'>", ActionSelection()$Action, "</span>",
+                  "<span style='width: 70%; float:left; display:block; font-size: 14px; font-weight: bold; color:",ActionSelection()$Color,";'>", ActionSelection()$SubAction,"</span>",
+                  "</div>",
+                  "</div>",
+                  "<span>Project: ", ActionSelection()$ProjectName,"</span><br>",
+                  "Year Started: ", ActionSelection()$Year, "<br>",
+                  "Year Completed: ", ActionSelection()$YearComplete, "<br>",
+                  "Status: ", ActionSelection()$Status, "<br>",
+                  
+                  
+                  "Lat: ", ActionSelection()$LAT, "Long: ", ActionSelection()$LONG, "<br>",
+                  ActionSelection()$KeyMetric1,"- ", ActionSelection()$Value1, "<br>",
+                  ActionSelection()$ShortDescription,
+                  "</div>",
+                  "</div>"
+                )
+        )
+    })
+  
   
   #Updates Zoom selection without updating entire map 
   observeEvent(ZoomSelection(), 
