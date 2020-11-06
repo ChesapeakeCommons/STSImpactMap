@@ -39,13 +39,17 @@ ui <- fluidPage(theme = "styler.css",
       # Side Panel Display with Save the Sound Info
   ),
   div(id = "side-panel",
+      div(  id = "title"
+        #    img(    id = 'title-image',
+         #           src='images/save-the-sound-title-02.png'
+        #    )
+            
+            #Descriptive Text 
+      ),
+     
       div( id = "side-panel-wrapper",
-           div(  id = "title",
-                 img(    id = 'title-image',
-                         src='images/save-the-sound-title.png'
-                 )
-                 
-                 #Descriptive Text 
+           div(class = "description",
+             HTML("<a href='http://www.savethesound.org'>Go Back!</a>")
            ),
            div(  class = "description",
                  tags$h1("2020 Action Map"),
@@ -64,8 +68,10 @@ ui <- fluidPage(theme = "styler.css",
                  )
            ),
            #Filter output block - see output$Filters for rendering code
-           uiOutput("Filters")
-           
+           div(
+            class='filters',
+            uiOutput("Filters")
+           )
       )
   )
 )
@@ -344,15 +350,23 @@ server <- function(input, output, session) {
                     "</div>",
                     "<div class='popup-body'>",
                       "<span class='popup-title-h2 pu-h2-adj'><b>Project:</b>", ActionSelection()$ProjectName,"</span>",
-                      "<span style='clear:left; display:block; padding-top:4px;'>",
-                        "<b>Status:</b> ", ActionSelection()$Status,"",  
+                      "<span class='popup-line'>",
+                        "<b>Status:</b> ",  Data_Test_V1$Status[row],"",  
                         "<b style='margin-left:10px'>Started:</b> ", ActionSelection()$Year, "",
                         "<b style='margin-left:10px'>Completed:</b> ", ActionSelection()$YearComplete, "<br>",
                        "</span>",
-                  
-                      "Lat: ", ActionSelection()$LAT, "Long: ", ActionSelection()$LONG, "<br>",
-                        ActionSelection()$KeyMetric1,"- ", ActionSelection()$Value1, "<br>",
-                         ActionSelection()$ShortDescription,
+                       "<span class='popup-line' style='line-height:15px; text-overflow: ellipsis'><b>Description:</b>",ActionSelection()$ShortDescription,
+                        "</span>",
+                        "<span class='popup-line '><b>",ActionSelection()$KeyMetric1,":</b> ",ActionSelection()$Value1,"</span>",
+                        "<span class='popup-line popup-line-adj'><b>",ActionSelection()$KeyMetric2,":</b> ",ActionSelection()$Value2,"</span>",
+                        "<span class='popup-line'>", 
+                            "<b>More Info:</b><a href='",ActionSelection()$Url,"'>",ActionSelection()$Url,"</a>",
+                        "</span>",
+                        "<span class='popup-line' style='text-overflow: ellipsis'>", 
+                        "<span class='popup-line'><b>LOCATION:</b>",ActionSelection()$LocationName,"</span>",
+                        "<span class='popup-line popup-line-adj'><b>LAT:</b>",ActionSelection()$LAT,"&nbsp; <b>LONG:</b>",ActionSelection()$LONG,"</span>",
+                         
+                        "</span>",
                     "</div>",
                     "</div>",
                    "</div>"

@@ -4,7 +4,11 @@
 body
 {
 
-height: 100%;
+  height: 100%;
+  color:#ffffff;
+  font-weight: 300;  
+  
+  
 }
 
 #main-panel
@@ -33,7 +37,7 @@ height: 100%;
 {
     width: 235px;
     margin: 0 auto;
-    margin-top: 40px;
+    margin-top: 25px;
 }
 
 
@@ -58,7 +62,13 @@ height: 100%;
     float: right;
 
 }
-
+#title {
+  background-image: url('images/save-the-sound-title-02.png');
+  background-size: cover;
+  min-height:65px;
+  width:100%;
+  
+}
 #title-image {
     width: 234px;
     height: 81px;
@@ -101,6 +111,15 @@ p {
   
 }
 
+.description{
+  margin-bottom: 12px;
+  
+}
+.filters{
+  font-weight: normal;
+  margin-top: 30px;
+  
+}
 
 
 .leaflet-popup-content {
@@ -118,7 +137,7 @@ p {
 .popup-wrapper{
     border: 0px solid red;
     width: 100%;
-    min-height: 200px;
+    min-height: 240px;
 
 }
 .popup-title{
@@ -166,10 +185,24 @@ p {
  /* margin-top:10px;
   */
 }
+.popup-line{
+  float:left;
+  clear:left; 
+  display:block; 
+  padding-top:4px;
+  width:100%;
+  border: 0px solid red;
+  
+}
+.popup-line-adj{
+  padding-top:0px;
+  line-height: 15px;
+  
+}
 .popup-image{
-  width:140px;
-  max-width: 140px;
-  min-height: 200px;
+  width:160px;
+  max-width: 160px;
+  min-height: 240px;
   overflow: hidden;
   display: block;
   float: left;
