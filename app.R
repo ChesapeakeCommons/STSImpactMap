@@ -33,7 +33,12 @@ ui <- fluidPage(theme = "styler.css",
       
       #Map
       div(id = "main-panel",
-          leafletOutput("leafmap")
+          
+          leafletOutput("leafmap"),
+          div(style="position: absolute; left: 50%; ",
+              div(class = "overlay-image")
+          )
+          
       )
       
       # Side Panel Display with Save the Sound Info
@@ -284,7 +289,7 @@ server <- function(input, output, session) {
   output$leafmap <- renderLeaflet({
 
     
-     leaflet() %>%
+     leaflet(options = leafletOptions(zoomControl = FALSE)) %>%
        addPolygons(data = STS_Boat, fill = FALSE, weight = 2, dashArray = "3", color = "grey") %>%
        addProviderTiles("CartoDB.VoyagerLabelsUnder", group = "Streets") %>%
        addProviderTiles("Esri.WorldTopoMap", group = "Terrain")%>%
@@ -295,7 +300,10 @@ server <- function(input, output, session) {
       #Adding Search service
       addSearchOSM(options = searchOptions(zoom=15, position = 'topright',
                                            autoCollapse = TRUE,
-                                           minLength = 2))
+                                           minLength = 2))%>%
+      htmlwidgets::onRender("function(el, x) {
+        L.control.zoom({ position: 'bottomright' }).addTo(this)
+      }")
   })
   
 #This updates the map based on the changes in the selected data such that the map doesn't need to redraw every time

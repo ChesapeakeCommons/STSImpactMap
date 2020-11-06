@@ -7,7 +7,7 @@ body
   height: 100%;
   color:#ffffff;
   font-weight: 300;  
-  
+  background-color: #000000;
   
 }
 
@@ -15,7 +15,8 @@ body
 {
 	height: 100%;
     width: calc(100% - 180px);
-	margin-left: 150px;
+	margin-left: 165px;
+	background-color: #000000;
 }
 
 
@@ -23,7 +24,6 @@ body
 {
    display:     block;
     position:   absolute;
-   height:      400px;
    width:       315px;
     top:        0px;
     left:       0px;
@@ -43,7 +43,8 @@ body
 
 #wrapper 
 {
-   background: black;
+    background-color: #000000;
+   /*background: #3498d8;*/
     height: 100%;
     top: 0px;
     left: 0px;
@@ -53,9 +54,9 @@ body
 
 #leafmap {
     height: calc(100vh - 0px) !important;
-    width: calc(100vw - 330px) !important;
+    width: calc(100vw - 315px) !important;
     display: block;
-    margin-left:150px;
+    margin-left:135px;
 }
 
 .search-button {
@@ -229,6 +230,18 @@ p {
   float: left;
   border:0px solid pink;
   
+}
+
+.overlay-image{
+  width:200px; 
+  height:100px;
+  background-color: red;
+  position: absolute; 
+  left: -50%;
+  display:block;
+  bottom: 50px;
+   z-index: 999;
+    margin: 0 auto;
 }
 
 
