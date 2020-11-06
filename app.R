@@ -22,7 +22,7 @@ library(rjson)
 library(geojsonR)
 library(sp)
 ###########  UI Display Script ############
-ui <- fluidPage(
+ui <- fluidPage(theme = "styler.css",
   #(theme = "styler.css",
   
   
@@ -30,8 +30,6 @@ ui <- fluidPage(
 
   div(id = "wrapper",
       
-      #Filter output block - see output$Filters for rendering code
-      uiOutput("Filters"),
       
       #Map
       div(id = "main-panel",
@@ -41,13 +39,17 @@ ui <- fluidPage(
       # Side Panel Display with Save the Sound Info
   ),
   div(id = "side-panel",
+      div(  id = "title"
+        #    img(    id = 'title-image',
+         #           src='images/save-the-sound-title-02.png'
+        #    )
+            
+            #Descriptive Text 
+      ),
+     
       div( id = "side-panel-wrapper",
-           div(  id = "title",
-                 img(    id = 'title-image',
-                         src='images/save-the-sound-title.png'
-                 )
-                 
-                 #Descriptive Text 
+           div(class = "description",
+             HTML("<a href='http://www.savethesound.org'>Go Back!</a>")
            ),
            div(  class = "description",
                  tags$h1("2020 Action Map"),
@@ -64,11 +66,15 @@ ui <- fluidPage(
                  tags$p(
                    HTML("<font style='font-weight: 400;'>Efforts to improve the</font> Long Island Sound")
                  )
+           ),
+           #Filter output block - see output$Filters for rendering code
+           div(
+            class='filters',
+            uiOutput("Filters")
            )
       )
   )
 )
-
 ########## Server Side Script ############
 
 server <- function(input, output, session) {
@@ -284,8 +290,12 @@ server <- function(input, output, session) {
        addProviderTiles("Esri.WorldTopoMap", group = "Terrain")%>%
        addProviderTiles("GeoportailFrance.orthos", group = "Satellite")%>%
        addLayersControl(baseGroups = c("Streets", "Terrain", "Satellite"),
-                        options = layersControlOptions(collapsed = FALSE))%>%
-       setView(lng = 41, lat = -72, zoom = 8)
+                        options = layersControlOptions(collapsed = FALSE,  position = 'bottomright'))%>%
+       setView(lng = 41, lat = -72, zoom = 8)%>%
+      #Adding Search service
+      addSearchOSM(options = searchOptions(zoom=15, position = 'topright',
+                                           autoCollapse = TRUE,
+                                           minLength = 2))
   })
   
 #This updates the map based on the changes in the selected data such that the map doesn't need to redraw every time
@@ -298,7 +308,7 @@ server <- function(input, output, session) {
     
     mapIcon <- makeIcon(
       iconUrl = url,
-      iconWidth = 100, iconHeight = 64)
+      iconWidth = 32, iconHeight = 32)
 
       # Creating Popup Image
       PopupImage <- ActionSelection()$Image
@@ -322,18 +332,48 @@ server <- function(input, output, session) {
                                   removeOutsideVisibleBounds = TRUE,
                                   spiderLegPolylineOptions = list(weight = 5, color = "#222", opacity = 0.5), 
                                   freezeAtZoom = TRUE),
-                 #Popup Code
-                 popup = paste("Action: ", ActionSelection()$Action, "<br>",
-                         "Year Started: ", ActionSelection()$Year, "<br>",
-                         "Year Completed: ", ActionSelection()$YearComplete, "<br>",
-                         "Status: ", ActionSelection()$Status, "<br>",
-                         "Sub Action: ", ActionSelection()$SubAction, "<br>",
-                         "Project Name: ", ActionSelection()$ProjectName, "<br>",
-                         "Lat: ", ActionSelection()$LAT, "Long: ", ActionSelection()$LONG, "<br>",
-                          ActionSelection()$KeyMetric1,"- ", ActionSelection()$Value1, "<br>",
-                          ActionSelection()$ShortDescription)) 
-                          
-      })
+                #Popup Code
+                popup = paste(
+                  "<div class='popup-wrapper'>",
+                    "<div class='popup-image' style='border: 0px solid red;",
+                      "background-image: url(\"",ActionSelection()$Image,"\")'>",
+                  # "<img class='pu-img' src='", ActionSelection()$Image ,"'>",
+                    "</div>",
+                    "<div class='popup-text'>",
+                      "<div class='popup-title'>",
+                        "<div class='popup-title-marker' style='background-image:url(\"",ActionSelection()$Marker,"\")'>",
+                        "</div>",
+                      "<div class='popup-title-text'>",
+                        "<span class='popup-title-h1' style=''>", ActionSelection()$Action, "</span>",
+                        "<span class='popup-title-h2' style='color:",ActionSelection()$Color,";'>", ActionSelection()$SubAction,"</span>",
+                      "</div>",
+                    "</div>",
+                    "<div class='popup-body'>",
+                      "<span class='popup-title-h2 pu-h2-adj'><b>Project:</b>", ActionSelection()$ProjectName,"</span>",
+                      "<span class='popup-line'>",
+                        "<b>Status:</b> ",  Data_Test_V1$Status[row],"",  
+                        "<b style='margin-left:10px'>Started:</b> ", ActionSelection()$Year, "",
+                        "<b style='margin-left:10px'>Completed:</b> ", ActionSelection()$YearComplete, "<br>",
+                       "</span>",
+                       "<span class='popup-line' style='line-height:15px; text-overflow: ellipsis'><b>Description:</b>",ActionSelection()$ShortDescription,
+                        "</span>",
+                        "<span class='popup-line '><b>",ActionSelection()$KeyMetric1,":</b> ",ActionSelection()$Value1,"</span>",
+                        "<span class='popup-line popup-line-adj'><b>",ActionSelection()$KeyMetric2,":</b> ",ActionSelection()$Value2,"</span>",
+                        "<span class='popup-line'>", 
+                            "<b>More Info:</b><a href='",ActionSelection()$Url,"'>",ActionSelection()$Url,"</a>",
+                        "</span>",
+                        "<span class='popup-line' style='text-overflow: ellipsis'>", 
+                        "<span class='popup-line'><b>LOCATION:</b>",ActionSelection()$LocationName,"</span>",
+                        "<span class='popup-line popup-line-adj'><b>LAT:</b>",ActionSelection()$LAT,"&nbsp; <b>LONG:</b>",ActionSelection()$LONG,"</span>",
+                         
+                        "</span>",
+                    "</div>",
+                    "</div>",
+                   "</div>"
+                )
+        )
+    })
+  
   
   #Updates Zoom selection without updating entire map 
   observeEvent(ZoomSelection(), 
