@@ -30,8 +30,6 @@ ui <- fluidPage(theme = "styler.css",
 
   div(id = "wrapper",
       
-      #Filter output block - see output$Filters for rendering code
-      uiOutput("Filters"),
       
       #Map
       div(id = "main-panel",
@@ -286,7 +284,7 @@ server <- function(input, output, session) {
        addProviderTiles("Esri.WorldTopoMap", group = "Terrain")%>%
        addProviderTiles("GeoportailFrance.orthos", group = "Satellite")%>%
        addLayersControl(baseGroups = c("Streets", "Terrain", "Satellite"),
-                        options = layersControlOptions(collapsed = FALSE))%>%
+                        options = layersControlOptions(collapsed = FALSE,  position = 'bottomright'))%>%
        setView(lng = 41, lat = -72, zoom = 8)%>%
       #Adding Search service
       addSearchOSM(options = searchOptions(zoom=15, position = 'topright',
@@ -304,7 +302,7 @@ server <- function(input, output, session) {
     
     mapIcon <- makeIcon(
       iconUrl = url,
-      iconWidth = 100, iconHeight = 64)
+      iconWidth = 32, iconHeight = 32)
 
       # Creating Popup Image
       PopupImage <- ActionSelection()$Image
@@ -331,30 +329,33 @@ server <- function(input, output, session) {
                 #Popup Code
                 popup = paste(
                   "<div class='popup-wrapper'>",
-                  "<div class='popup-image' style='border: 1px solid red;",
-                  "background-image: url(\"",ActionSelection()$Image,"\")'>",
+                    "<div class='popup-image' style='border: 0px solid red;",
+                      "background-image: url(\"",ActionSelection()$Image,"\")'>",
                   # "<img class='pu-img' src='", ActionSelection()$Image ,"'>",
-                  "</div>",
-                  "<div class='popup-text'>",
-                  "<div class='popup-title'>",
-                  "<div class='popup-title-marker' style='background-image:url(\"",ActionSelection()$Marker,"\")'>",
-                  "</div>",
-                  "<div class='popup-title-text'>",
-                  "<span style='width: 70%; float:left; display:block; font-size: 18px; font-weight: bold;'>", ActionSelection()$Action, "</span>",
-                  "<span style='width: 70%; float:left; display:block; font-size: 14px; font-weight: bold; color:",ActionSelection()$Color,";'>", ActionSelection()$SubAction,"</span>",
-                  "</div>",
-                  "</div>",
-                  "<span>Project: ", ActionSelection()$ProjectName,"</span><br>",
-                  "Year Started: ", ActionSelection()$Year, "<br>",
-                  "Year Completed: ", ActionSelection()$YearComplete, "<br>",
-                  "Status: ", ActionSelection()$Status, "<br>",
+                    "</div>",
+                    "<div class='popup-text'>",
+                      "<div class='popup-title'>",
+                        "<div class='popup-title-marker' style='background-image:url(\"",ActionSelection()$Marker,"\")'>",
+                        "</div>",
+                      "<div class='popup-title-text'>",
+                        "<span class='popup-title-h1' style=''>", ActionSelection()$Action, "</span>",
+                        "<span class='popup-title-h2' style='color:",ActionSelection()$Color,";'>", ActionSelection()$SubAction,"</span>",
+                      "</div>",
+                    "</div>",
+                    "<div class='popup-body'>",
+                      "<span class='popup-title-h2 pu-h2-adj'><b>Project:</b>", ActionSelection()$ProjectName,"</span>",
+                      "<span style='clear:left; display:block; padding-top:4px;'>",
+                        "<b>Status:</b> ", ActionSelection()$Status,"",  
+                        "<b style='margin-left:10px'>Started:</b> ", ActionSelection()$Year, "",
+                        "<b style='margin-left:10px'>Completed:</b> ", ActionSelection()$YearComplete, "<br>",
+                       "</span>",
                   
-                  
-                  "Lat: ", ActionSelection()$LAT, "Long: ", ActionSelection()$LONG, "<br>",
-                  ActionSelection()$KeyMetric1,"- ", ActionSelection()$Value1, "<br>",
-                  ActionSelection()$ShortDescription,
-                  "</div>",
-                  "</div>"
+                      "Lat: ", ActionSelection()$LAT, "Long: ", ActionSelection()$LONG, "<br>",
+                        ActionSelection()$KeyMetric1,"- ", ActionSelection()$Value1, "<br>",
+                         ActionSelection()$ShortDescription,
+                    "</div>",
+                    "</div>",
+                   "</div>"
                 )
         )
     })

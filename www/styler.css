@@ -25,7 +25,7 @@ height: 100%;
     left:       0px;
    position:    fixed;
    background-color:   #3498d8; 
-   border: 1px solid red;
+   border: 0px solid red;
    height: 100%;
 }
 
@@ -107,12 +107,16 @@ p {
   margin: 0px 0px 0px 0px;
   width: 100% !important;
   display:block;
-  border: 1px solid purple;
+  border: 0px solid purple;
+  
+}
+.leaflet-popup-content-wrapper{
+  padding: 0px 0px 0px 0px;
   
 }
 
 .popup-wrapper{
-    border: 1px solid red;
+    border: 0px solid red;
     width: 100%;
     min-height: 200px;
 
@@ -120,14 +124,14 @@ p {
 .popup-title{
   width: 100%;
   height: 50px;
-  border: 1px solid blue;
+  border: 0px solid blue;
   float: left;
   display: block;
   
 }
 .popup-title-marker{
-  width: 40px;
-  height: 40px;
+  width: 47px;
+  height: 47px;
   border: 0px solid green;
   float: left;
   display: block;
@@ -135,7 +139,33 @@ p {
 
   
 }
+.popup-title-text{
+  padding-left:10px;
+  
+}
 
+.popup-title-h1{
+  border:0px solid red; 
+  width: 70%; 
+  float:left; 
+  display:block; 
+  font-size: 20px; 
+  font-weight: bold;
+}
+.popup-title-h2{
+  line-height: 14px; 
+  border:0px solid red; 
+  width: 70%; 
+  float:left; 
+  display:block; 
+  font-size: 15px; 
+  font-weight: normal;
+}
+.pu-h2-adj{
+  width: 100%;
+ /* margin-top:10px;
+  */
+}
 .popup-image{
   width:140px;
   max-width: 140px;
@@ -148,6 +178,8 @@ p {
   background-size: cover;
   background-position: center;
    background-repeat: no-repeat;
+   border-top-left-radius: 9px;
+   border-bottom-left-radius: 9px;
 
   
 }
@@ -162,7 +194,7 @@ p {
   display: block;
   padding: 4px 12px 4px 12px;
   float: left;
-  border:1px solid pink;
+  border:0px solid pink;
   
 }
 
