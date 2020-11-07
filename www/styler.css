@@ -31,6 +31,7 @@ body
    background-color:   #3498d8; 
    border: 0px solid red;
    height: 100%;
+   z-index: 900;
 }
 
 #side-panel-wrapper
@@ -38,6 +39,7 @@ body
     width: 235px;
     margin: 0 auto;
     margin-top: 25px;
+    
 }
 
 
@@ -63,6 +65,7 @@ body
     float: right;
 
 }
+
 #title {
   background-image: url('images/save-the-sound-title-02.png');
   background-size: cover;
@@ -122,6 +125,7 @@ p {
   
 }
 
+/*START POPUP*/
 
 .leaflet-popup-content {
   margin: 0px 0px 0px 0px;
@@ -231,31 +235,58 @@ p {
   border:0px solid pink;
   
 }
+/*END KEY POPUP*/
 
-.overlay-image{
-  width:200px; 
-  height:100px;
-  background-color: red;
+/*START KEY OVERLAY*/
+.key-overlay-container{
   position: absolute; 
-  left: -50%;
+  left: calc(50vw - 150px) !important;
+  
+}
+
+.key-overlay{
+  width:566px; 
+  height:74px;
+  background-color: #ffffff;
+  position: absolute; 
+  left: -25%;
   display:block;
-  bottom: 50px;
-   z-index: 999;
+  bottom: 45px;
+   z-index: 800;
     margin: 0 auto;
+   
+    border:2px solid rgba(0,50,50,35%);
+    border-top-left-radius: 5px;
+   border-bottom-left-radius: 5px;
+   border-top-right-radius: 5px;
+   border-bottom-right-radius: 5px;
 }
 
 
 
-
-/*#map.html-widget.html-widget-output.leaflet-container.leaflet-fade-anim.leaflet-grab.leaflet-retina.leaflet-touch.leaflet-touch-drag.leaflet-touch-zoom.shiny-bound-output
-{
-	min-width: 300px;
-	min-height: 330px;
-	max-width: 300px; 
-	max-height: 300px;
-	margin: 5px 5px 5px 5px;
-	border-radius: 30px;
-	border: 1px solid black;
-	text-align: center;
+.key-image{
+   background-size: cover;
+    background-image: url('images/key.png');
+    width:500px; 
+    height:70px;
+    float: right;
+    display: inline-block;
+     border-top-right-radius: 5px;
+   border-bottom-right-radius: 5px;
 }
-*/
+.key-text{
+   width:60px; 
+     
+    float: left;
+    display: inline-block;
+    color: #000000;
+    text-align: center;
+    margin-top:25px;
+    background-color: #ffffff;
+    border:0px solid blue;
+    font-weight:normal;
+}
+
+/*END KEY OVERLAY*/
+
+

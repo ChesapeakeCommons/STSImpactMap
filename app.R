@@ -35,8 +35,12 @@ ui <- fluidPage(theme = "styler.css",
       div(id = "main-panel",
           
           leafletOutput("leafmap"),
-          div(style="position: absolute; left: 50%; ",
-              div(class = "overlay-image")
+          div( class= "key-overlay-container",
+              div(class = "key-overlay",
+                  div(class="key-text",
+                      HTML("Key")),
+                  div(class="key-image")
+              )
           )
           
       )
