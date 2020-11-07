@@ -36,7 +36,7 @@ body
 
 #side-panel-wrapper
 {
-    width: 235px;
+    width: 265px;
     margin: 0 auto;
     margin-top: 25px;
     
@@ -87,15 +87,17 @@ h1 {
     font-weight: 700;
     margin: 0 auto;
     margin-top: 20px;
-    width: 235px;
+    /*width: 265px;*/
 }
 
 p {
     color: #ffffff;
-    font-weight: 700;
+    font-weight: normal;
+    font-size: 16px;
     margin: 0 auto;
-    width: 235px;
+    /*width: 265px;*/
     margin-top:20px;
+    text-align: just;
 }
 
 .btn {
@@ -251,7 +253,7 @@ p {
   position: absolute; 
   left: -25%;
   display:block;
-  bottom: 45px;
+  bottom: 26px;
    z-index: 800;
     margin: 0 auto;
    

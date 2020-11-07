@@ -72,7 +72,7 @@ ui <- fluidPage(theme = "styler.css",
            ),
            div(  class = "description",
                  tags$h1("200+"),
-                 tags$p(
+                 tags$p(style="margin-top:5px;",
                    HTML("<font style='font-weight: 400;'>Efforts to improve the</font> Long Island Sound")
                  )
            ),
