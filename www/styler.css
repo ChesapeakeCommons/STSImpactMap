@@ -66,10 +66,20 @@ body
 
 }
 
- .selectize-input { 
+  .selectize-input { 
    
  }
 
+.leaflet-tooltip-pane{
+  font-weight: bold;
+}
+
+/*
+#inSubActionSelector{
+  display: block !important;
+  
+}
+*/
 #title {
   background-image: url('images/save-the-sound-title-06.png');
   background-size: cover;

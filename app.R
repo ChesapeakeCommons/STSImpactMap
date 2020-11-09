@@ -367,7 +367,7 @@ server <- function(input, output, session) {
                         "<b style='margin-left:10px'>Started:</b> ", ActionSelection()$Year, "",
                         "<b style='margin-left:10px'>Completed:</b> ", ActionSelection()$YearComplete, "<br>",
                        "</span>",
-                       "<span class='popup-line' style='line-height:15px; display:inline-block; text-overflow:hidden; text-overflow: ellipsis; max-height: 36px;'><b>Description:</b>",ActionSelection()$ShortDescription,
+                       "<span class='popup-line' style='line-height:15px; display:inline-block; overflow:hidden; text-overflow: ellipsis; max-height: 36px;'><b>Description:</b>",ActionSelection()$ShortDescription,
                         "</span>",
                         "<span class='popup-line '><b>",ActionSelection()$KeyMetric1,":</b> ",ActionSelection()$Value1,"</span>",
                         "<span class='popup-line popup-line-adj'><b>",ActionSelection()$KeyMetric2,":</b> ",ActionSelection()$Value2,"</span>",
