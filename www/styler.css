@@ -66,10 +66,14 @@ body
 
 }
 
+ .selectize-input { 
+   
+ }
+
 #title {
-  background-image: url('images/save-the-sound-title-02.png');
+  background-image: url('images/save-the-sound-title-06.png');
   background-size: cover;
-  min-height:65px;
+  min-height:80px;
   width:100%;
   
 }

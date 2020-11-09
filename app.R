@@ -58,10 +58,10 @@ ui <- fluidPage(theme = "styler.css",
      
       div( id = "side-panel-wrapper",
            div(class = "description",
-             HTML("<a href='http://www.savethesound.org'>Go Back!</a>")
+             HTML("<a href='http://www.savethesound.org' style='color:#ffffff'>Go Back!</a>")
            ),
            div(  class = "description",
-                 tags$h1("2020 Action Map"),
+               #  tags$h1("2020 Action Map"),
                  tags$p("
                         The waters of Long Island Sound
                         touch the lives of millions in
@@ -367,7 +367,7 @@ server <- function(input, output, session) {
                         "<b style='margin-left:10px'>Started:</b> ", ActionSelection()$Year, "",
                         "<b style='margin-left:10px'>Completed:</b> ", ActionSelection()$YearComplete, "<br>",
                        "</span>",
-                       "<span class='popup-line' style='line-height:15px; text-overflow: ellipsis'><b>Description:</b>",ActionSelection()$ShortDescription,
+                       "<span class='popup-line' style='line-height:15px; display:inline-block; text-overflow:hidden; text-overflow: ellipsis; max-height: 36px;'><b>Description:</b>",ActionSelection()$ShortDescription,
                         "</span>",
                         "<span class='popup-line '><b>",ActionSelection()$KeyMetric1,":</b> ",ActionSelection()$Value1,"</span>",
                         "<span class='popup-line popup-line-adj'><b>",ActionSelection()$KeyMetric2,":</b> ",ActionSelection()$Value2,"</span>",
