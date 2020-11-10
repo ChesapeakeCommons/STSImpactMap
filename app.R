@@ -21,7 +21,6 @@ library(jsonlite)
 library(rjson)
 library(geojsonR)
 library(sp)
-library(tidyverse)
 ###########  UI Display Script ############
 ui <- fluidPage(theme = "styler.css",
   #(theme = "styler.css",
