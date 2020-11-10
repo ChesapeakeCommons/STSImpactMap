@@ -21,6 +21,7 @@ library(jsonlite)
 library(rjson)
 library(geojsonR)
 library(sp)
+library(tidyverse)
 ###########  UI Display Script ############
 ui <- fluidPage(theme = "styler.css",
   #(theme = "styler.css",
@@ -80,7 +81,8 @@ ui <- fluidPage(theme = "styler.css",
            div(
             class='filters',
             uiOutput("Filters")
-           )
+           ),
+           
       )
   )
 )
@@ -91,12 +93,20 @@ server <- function(input, output, session) {
   ##### DATASET IMPORT ####
   # this lets us bypass the Authorization step from gsheet4 if they are ok with just having the googlesheet be public - I can hook it up to be private though after the fact.
   gs4_deauth()
-  (Data_Test_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/10VMsQ57EL25gDjb7bAEjOZDI2mEWiOkIoHwHWNW0MOE/edit#gid=0"))
- # Import_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1_kWe4pEOo7yur9WPMh1YabdCSjoIz-yS37jM6T5_oWw/edit#gid=0")
+  
+  Data_Test_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/10VMsQ57EL25gDjb7bAEjOZDI2mEWiOkIoHwHWNW0MOE/edit#gid=0")
+  
   ZoomExtent_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1viLwGCnhsdhfgsgIHjYYj6INNu7YqG_h8srlQsCNf6Y/edit#gid=0")
-  # Symbology_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1N0L7-gZH4iqxrbQVYLtLJU7Dbuz2nVnYE-8wUrzPK6o/edit#gid=0")
+  
+  Symbology_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1N0L7-gZH4iqxrbQVYLtLJU7Dbuz2nVnYE-8wUrzPK6o/edit#gid=0")
+  
+  Data_Test_V1 <- merge(Data_Test_V1,Symbology_V1, all.x = TRUE)
+ 
+  
+  print(Data_Test_V1)
   
   #### Block for calculating year span for uncompleted projects #### 
+ 
   Data_Test_V1$Status <- ""
   Data_Test_V1$Span <- 1
   
@@ -110,7 +120,7 @@ server <- function(input, output, session) {
     }
   else
     {
-     Data_Test_V1$Span[row] <- as.numeric(Data_Test_V1$YearComplete[row]) - as.numeric(Data_Test_V1$Year[row]) + 1
+     Data_Test_V1$Span[row] <- (as.numeric(Data_Test_V1$YearComplete[row]) - as.numeric(Data_Test_V1$Year[row])) + 1
      Data_Test_V1$Status[row] <- "Complete"
     }
   }
@@ -121,18 +131,23 @@ server <- function(input, output, session) {
   
   
   #Loops throug and adds additional layers
-  Data_Test_V2 <- Data_Test_V1[rep(row.names(Data_Test_V1), Data_Test_V1$Span), 1:20]
+  Data_Test_V2 <- Data_Test_V1[rep(row.names(Data_Test_V1), Data_Test_V1$Span), 1:22]
               
   #Changes the start year 
   Data_Test_V2$Count <- ave(Data_Test_V2$Year, Data_Test_V2$ProjectName, FUN = seq_along)
   
   #Corrects the math
   Data_Test_V2$Year <- Data_Test_V2$Year - 1 + Data_Test_V2$Count
+  #print(Data_Test_V2)
   
-  
-
- # write.csv(Data_Test_V2, "Data_Test_V2.csv")
-  
+  #Checks to see if image link is NA - if so puts in placeholder image
+  for(row in 1:nrow(Data_Test_V2))
+  {
+   if(is.na(Data_Test_V2$Image[row]))
+     {
+       Data_Test_V2$Image[row] <- "https://live.staticflickr.com/65535/50576736566_42904e1bd5_k.jpg"
+    }
+  }
    
   
   
@@ -140,7 +155,7 @@ server <- function(input, output, session) {
   #### END DATASETIMPORT #####
   
   output$Filters <- renderUI({
-    
+  #  test <- ActionSelection()$YearComplete
     req(Data_Test_V2)
     req(ZoomExtent_V1)
     #Zoom Selction 
@@ -284,7 +299,7 @@ server <- function(input, output, session) {
    # STS_Boat_Raw <- system.file("www/STS_Boat.kml", package = "leaflet.extras")
     #STS_Boat_Kml <- readr::read_file(STS_Boat_Raw)
   
-  STS_Boat <- rgdal::readOGR("www/STS_Boat_v5.geojson")
+  STS_Boat <- rgdal::readOGR("www/STS_Boat_v6.geojson")
 
  #  })
   
@@ -340,10 +355,10 @@ server <- function(input, output, session) {
                 #Marker Cluster Options
                 clusterOptions = markerClusterOptions(showCoverageOnHover = FALSE,
                                   zoomToBoundsOnClick = TRUE, 
-                                  spiderfyOnMaxZoom = 5,
+                                  spiderfyOnMaxZoom = 2,
                                   removeOutsideVisibleBounds = TRUE,
                                   spiderLegPolylineOptions = list(weight = 5, color = "#222", opacity = 0.5), 
-                                  freezeAtZoom = TRUE),
+                                  freezeAtZoom = 10),
                 #Popup Code
                 popup = paste(
                   "<div class='popup-wrapper'>",
@@ -363,7 +378,7 @@ server <- function(input, output, session) {
                     "<div class='popup-body'>",
                       "<span class='popup-title-h2 pu-h2-adj'><b>Project:</b>", ActionSelection()$ProjectName,"</span>",
                       "<span class='popup-line'>",
-                        "<b>Status:</b> ",  Data_Test_V1$Status[row],"",  
+                        "<b>Status:</b> ",  ActionSelection()$Status,"",  
                         "<b style='margin-left:10px'>Started:</b> ", ActionSelection()$Year, "",
                         "<b style='margin-left:10px'>Completed:</b> ", ActionSelection()$YearComplete, "<br>",
                        "</span>",
@@ -394,10 +409,16 @@ server <- function(input, output, session) {
           setView(lng = ZoomSelection()$Longitude, lat = ZoomSelection()$Latitude, zoom = ZoomSelection()$Zoom)
          })
   
+  
+  
+
+  
+  
+}
   #### END MAP #####
   
 
-}
+
 
 # Run the application 
 shinyApp(ui = ui, server = server)
