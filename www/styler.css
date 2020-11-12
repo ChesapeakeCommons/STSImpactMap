@@ -305,4 +305,17 @@ p {
 
 /*END KEY OVERLAY*/
 
+/*START COMPASS OVERLAY*/
+.compass-overlay-container{
+ position: absolute; 
+ right: 57px;
+ bottom: 140px;
+}
+.compass-overlay{
+  min-width: 72px;
+  min-height: 82px;
+  background-image: url('images/CompassRose.png');
+  background-size: cover;
+}
 
+/*END COMPASS OVERLAY*/

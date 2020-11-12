@@ -41,6 +41,9 @@ ui <- fluidPage(theme = "styler.css",
                       HTML("Key")),
                   div(class="key-image")
               )
+          ),
+          div( class ="compass-overlay-container",
+               div( class="compass-overlay")
           )
           
       )
