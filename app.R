@@ -130,8 +130,8 @@ server <- function(input, output, session) {
   
   
   #Loops throug and adds additional layers
-  Data_Test_V2 <- Data_Test_V1[rep(row.names(Data_Test_V1), Data_Test_V1$Span), 1:22]
-              
+  Data_Test_V2 <- Data_Test_V1[rep(row.names(Data_Test_V1), Data_Test_V1$Span), 1:21]
+
   #Changes the start year 
   Data_Test_V2$Count <- ave(Data_Test_V2$Year, Data_Test_V2$ProjectName, FUN = seq_along)
   
