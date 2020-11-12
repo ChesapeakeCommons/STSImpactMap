@@ -282,7 +282,7 @@ p {
 
 .key-image{
    background-size: cover;
-    background-image: url('images/key.png');
+    background-image: url('images/key2.png');
     width:500px; 
     height:70px;
     float: right;
@@ -305,4 +305,17 @@ p {
 
 /*END KEY OVERLAY*/
 
+/*START COMPASS OVERLAY*/
+.compass-overlay-container{
+ position: absolute; 
+ right: 57px;
+ bottom: 140px;
+}
+.compass-overlay{
+  min-width: 72px;
+  min-height: 82px;
+  background-image: url('images/CompassRose.png');
+  background-size: cover;
+}
 
+/*END COMPASS OVERLAY*/
