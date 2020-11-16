@@ -21,6 +21,7 @@ library(jsonlite)
 library(rjson)
 library(geojsonR)
 library(sp)
+library(stringr)
 ###########  UI Display Script ############
 ui <- fluidPage(theme = "styler.css",
   #(theme = "styler.css",
@@ -64,19 +65,29 @@ ui <- fluidPage(theme = "styler.css",
              HTML("<a href='http://www.savethesound.org' style='color:#ffffff'>Go Back!</a>")
            ),
            div(  class = "description",
+                 
+                 #Text output for Action Count (See output$DescriptionParagrah Render block in Server Side)
+                 
                #  tags$h1("2020 Action Map"),
-                 tags$p("
-                        The waters of Long Island Sound
-                        touch the lives of millions in
-                        New York, Connecticut, and beyond.
-                        Together, we can protect this
-                        precious natural resource.
-                    ")
+                  tags$p(
+                  textOutput("DescriptionParagraph")
+                 #        The waters of Long Island Sound
+                 #        touch the lives of millions in
+                 #        New York, Connecticut, and beyond.
+                 #        Together, we can protect this
+                 #        precious natural resource.
+                     )
            ),
            div(  class = "description",
-                 tags$h1("200+"),
+                 
+                 #Text output for Action Count (See output$ActionCount Render Block in Server Side)
+                 textOutput("ActionCount"),
+                 #tags$h1("200+"),
                  tags$p(style="margin-top:5px;",
-                   HTML("<font style='font-weight: 400;'>Efforts to improve the</font> Long Island Sound")
+                 #Text output for Action Count (See output$DescriptionSentence Render Block in Server Side)
+                 textOutput("DescriptionSentence")
+                  
+                #   HTML("<font style='font-weight: 400;'>Efforts to improve the</font> Long Island Sound")
                  )
            ),
            #Filter output block - see output$Filters for rendering code
@@ -102,13 +113,16 @@ server <- function(input, output, session) {
   
   Symbology_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1N0L7-gZH4iqxrbQVYLtLJU7Dbuz2nVnYE-8wUrzPK6o/edit#gid=0")
   
+  Text_Input_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1zOnGKfYbfOH7C6Dp1BjkpVOd6WenxViqk490DlLbcuI/edit#gid=0")
+  
+  ## Merging input dataset with Symbology datatest
   Data_Test_V1 <- merge(Data_Test_V1,Symbology_V1, all.x = TRUE)
  
   
-  print(Data_Test_V1)
+
   
   #### Block for calculating year span for uncompleted projects #### 
- 
+
   Data_Test_V1$Status <- ""
   Data_Test_V1$Span <- 1
   
@@ -133,7 +147,7 @@ server <- function(input, output, session) {
   
   
   #Loops throug and adds additional layers
-  Data_Test_V2 <- Data_Test_V1[rep(row.names(Data_Test_V1), Data_Test_V1$Span), 1:21]
+  Data_Test_V2 <- Data_Test_V1[rep(row.names(Data_Test_V1), Data_Test_V1$Span), 1:23]
               
   #Changes the start year 
   Data_Test_V2$Count <- ave(Data_Test_V2$Year, Data_Test_V2$ProjectName, FUN = seq_along)
@@ -150,10 +164,36 @@ server <- function(input, output, session) {
        Data_Test_V2$Image[row] <- "https://live.staticflickr.com/65535/50576736566_42904e1bd5_k.jpg"
     }
   }
-   
   
+  Data_Test_V2 <- Data_Test_V2 %>%
+    mutate_if(is.character, as.factor)
   
+   Data_Test_V2[is.na(Data_Test_V2)] = ""
+  Data_Test_V2[is.null(Data_Test_V2)] = ""
   
+  print(Data_Test_V2)
+#  Data_Test_V2[Data_Test_V2 == ""]<-NA
+  # 
+  # for(row in 1:nrow(Data_Test_V2))
+  # {
+  #   if(is.na(Data_Test_V2$)
+  # }
+  #  
+  
+  #Dynamic Text Paragraph
+  output$DescriptionParagraph <- renderText({
+    Text_Input_V1$DescriptionParagraph
+  })
+  
+  #Dynamic Text Action Count
+  output$ActionCount <- renderText({
+    Text_Input_V1$ActionCount
+  })
+  
+  #Dynamic Text
+  output$DescriptionSentence <- renderText({
+    Text_Input_V1$DescriptionSentence
+  })
   #### END DATASETIMPORT #####
   
   output$Filters <- renderUI({
@@ -199,11 +239,11 @@ server <- function(input, output, session) {
     {
       Layers <- Data_Test_V2
       updateSelectizeInput(session, "inActionSelector",
-                           choices = Layers$Action)
+                           choices = sort(Layers$Action))
       updateSelectizeInput(session, "inSubActionSelector",
-                           choices = Layers$SubAction)
+                           choices = sort(Layers$SubAction))
       updateSelectizeInput(session, "inYearSelector",
-                           choices = Layers$Year)
+                           choices = sort(Layers$Year, decreasing = TRUE))
       return(Layers)
     }
     #Updates Subaction and Year selection when only Action is chosen
@@ -211,9 +251,9 @@ server <- function(input, output, session) {
     {
       Layers <- filter(Data_Test_V2, Action %in% x)  
       updateSelectizeInput(session, "inSubActionSelector",
-                           choices = Layers$SubAction)
+                           choices = sort(Layers$SubAction))
       updateSelectizeInput(session, "inYearSelector",
-                           choices = Layers$Year)
+                           choices = sort(Layers$Year, decreasing = TRUE))
       return(Layers)
     }
     # Updates Year when Action and SubAction are selected
@@ -222,7 +262,7 @@ server <- function(input, output, session) {
       Layers <- filter(Data_Test_V2, Action %in% x)
       Layers <- filter(Layers, SubAction %in% y)
       updateSelectizeInput(session, "inYearSelector",
-                           choices = Layers$Year)
+                           choices = sort(Layers$Year, decreasing = TRUE))
       return(Layers)
     }
     # Updates Action and Year when SubAction is Selected
@@ -230,9 +270,9 @@ server <- function(input, output, session) {
     {
      Layers <- filter(Data_Test_V2, SubAction %in% y) 
      updateSelectizeInput(session, "inActionSelector",
-                          choices = Layers$Action)
+                          choices = sort(Layers$Action))
      updateSelectizeInput(session, "inYearSelector",
-                          choices = Layers$Year)
+                          choices = sort(Layers$Year, decreasing = TRUE))
      return(Layers)
     }
     #Updates Action when SubAction and Year are selected
@@ -241,7 +281,7 @@ server <- function(input, output, session) {
       Layers <- filter(Data_Test_V2, SubAction %in% y)
       Layers <- filter(Layers, Year %in% z)
       updateSelectizeInput(session, "inActionSelector",
-                           choices = Layers$Action)
+                           choices = sort(Layers$Action))
       return(Layers)
     }
     #Updates Action and Subaction when Year is selected
@@ -249,9 +289,9 @@ server <- function(input, output, session) {
     {
       Layers <- filter(Data_Test_V2, Year %in% z)
       updateSelectizeInput(session, "inActionSelector",
-                           choices = Layers$Action)
+                           choices = sort(Layers$Action))
       updateSelectizeInput(session, "inSubActionSelector",
-                           choices = Layers$SubAction)
+                           choices = sort(Layers$SubAction))
       return(Layers)
     }
     #Updates Subaction when Action and Year are selected
@@ -261,7 +301,7 @@ server <- function(input, output, session) {
       Layers <- filter(Layers, Year %in% z)
 
       updateSelectizeInput(session, "inSubActionSelector",
-                           choices = Layers$SubAction)
+                           choices = sort(Layers$SubAction))
       return(Layers)
     }
     #No update, just filters when all are selected 
@@ -311,7 +351,7 @@ server <- function(input, output, session) {
 
     
      leaflet(options = leafletOptions(zoomControl = FALSE)) %>%
-       addPolygons(data = STS_Boat, fill = FALSE, weight = 2, dashArray = "3", color = "grey") %>%
+       addPolygons(data = STS_Boat, fill = FALSE, weight = 2, dashArray = "5", color = "grey") %>%
        addProviderTiles("CartoDB.VoyagerLabelsUnder", group = "Streets") %>%
        addProviderTiles("Esri.WorldTopoMap", group = "Terrain")%>%
        addProviderTiles("GeoportailFrance.orthos", group = "Satellite")%>%
@@ -319,7 +359,7 @@ server <- function(input, output, session) {
                         options = layersControlOptions(collapsed = FALSE,  position = 'bottomright'))%>%
        setView(lng = 41, lat = -72, zoom = 8)%>%
       #Adding Search service
-      addSearchOSM(options = searchOptions(zoom=15, position = 'topright',
+       addSearchOSM(options = searchOptions(zoom=15, position = 'topright',
                                            autoCollapse = TRUE,
                                            minLength = 2))%>%
       htmlwidgets::onRender("function(el, x) {
@@ -334,10 +374,12 @@ server <- function(input, output, session) {
     
     #Creating Map Markers with URL (Will likely store this information in an Action only sheet and then join to layers in program after data importing)
     url <- as.character(ActionSelection()$Marker)
-    
+    w <- str_remove_all(ActionSelection()$Width, "[px]")
+    h <- str_remove_all(ActionSelection()$Height, "[px]")
+    print(w)
     mapIcon <- makeIcon(
       iconUrl = url,
-      iconWidth = 32, iconHeight = 32)
+      iconWidth = w, iconHeight = h)
 
       # Creating Popup Image
       PopupImage <- ActionSelection()$Image
@@ -359,9 +401,12 @@ server <- function(input, output, session) {
                                   zoomToBoundsOnClick = TRUE, 
                                   spiderfyOnMaxZoom = 2,
                                   removeOutsideVisibleBounds = TRUE,
-                                  spiderLegPolylineOptions = list(weight = 5, color = "#222", opacity = 0.5), 
+                                  spiderLegPolylineOptions = list(weight = 2, color = "#222", opacity = 0.5), 
                                   freezeAtZoom = 10,
-                                  maxClusterRadius = .05),
+                                  maxClusterRadius = .05,
+                                  weight=3,
+                                  color="#33CC33", opacity=1, fillColor="#FF9900", 
+                                  fillOpacity=0.8) ,
                 #Popup Code
                 popup = paste(
                   "<div class='popup-wrapper'>",
@@ -371,7 +416,7 @@ server <- function(input, output, session) {
                     "</div>",
                     "<div class='popup-text'>",
                       "<div class='popup-title'>",
-                        "<div class='popup-title-marker' style='background-image:url(\"",ActionSelection()$Marker,"\")'>",
+                  "<div class='popup-title-marker' style='height:", ActionSelection()$Height,"; width:",ActionSelection()$Width,"; background-image:url(\"",ActionSelection()$Marker,"\");'>",
                         "</div>",
                       "<div class='popup-title-text'>",
                         "<span class='popup-title-h1' style=''>", ActionSelection()$Action, "</span>",

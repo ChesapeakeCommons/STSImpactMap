@@ -318,4 +318,40 @@ p {
   background-size: cover;
 }
 
+/*Changing Marker Cluster Color to Grey */
+
+.leaflet-marker-icon.marker-cluster.marker-cluster-small.leaflet-zoom-animated.leaflet-interactive {
+    width: 10px;
+    height: 10px;
+  background-color: rgb(224,225,231);
+  }
+.leaflet-marker-icon.marker-cluster.marker-cluster-small.leaflet-zoom-animated.leaflet-interactive div {
+    width: 10px;
+    height: 10px;
+  background-color: rgb(224,225,231);
+  }
+
+.leaflet-marker-icon.marker-cluster.marker-cluster-medium.leaflet-zoom-animated.leaflet-interactive {
+    width: 10px;
+    height: 10px;
+  background-color: rgb(224,225,231);
+  }
+.leaflet-marker-icon.marker-cluster.marker-cluster-medium.leaflet-zoom-animated.leaflet-interactive div {
+    width: 10px;
+    height: 10px;
+  background-color: rgb(224,225,231);
+  }
+
+.leaflet-marker-icon.marker-cluster.marker-cluster-large.leaflet-zoom-animated.leaflet-interactive {
+    width: 10px;
+    height: 10px;
+  background-color: rgb(224,225,231);
+  }
+.leaflet-marker-icon.marker-cluster.marker-cluster-large.leaflet-zoom-animated.leaflet-interactive div {
+    width: 10px;
+    height: 10px;
+  background-color: rgb(224,225,231);
+  }
+
+
 /*END COMPASS OVERLAY*/
