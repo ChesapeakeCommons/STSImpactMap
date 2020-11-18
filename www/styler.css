@@ -48,7 +48,10 @@ body
     
 }
 
-
+.side-panel-description{
+  margin-bottom: 12px;
+  
+}
 
 
 #wrapper 
@@ -259,20 +262,42 @@ p {
     width: 100%;
   }
   */
+  body{
+    font-size: 10px !important;
+  }
+  
+  .container-fluid{
+    padding-right: 0px;
+    padding-left: 0px;
+    
+    
+  }
+  .form-control{
+    width:80%;
+  }
+  
   #main-panel {
     left: 0px;
     width: 100%;
     
   }
   #side-panel {
-      width: 20% !important;
+      width: clamp(100px, 20%, 256px)!important;
+     /* width: 20% !important;*/
+      
   }
   #side-panel-wrapper{
-     width: 20% !important;
+     width: 100% !important;
+     margin-left: 5%;
+     margin-right: 5%;
+  }
+  .side-panel-description{
+    width: 90%;
+    
   }
    #leafmap {
-      width:100% !important;
-      margin-left:0%;
+      width:80% !important;
+      margin-left:20%;
       /*margin-left: var(--m-sidebar-width) ;
       */
   }

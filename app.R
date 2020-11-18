@@ -61,10 +61,10 @@ ui <- fluidPage(theme = "styler.css",
       ),
      
       div( id = "side-panel-wrapper",
-           div(class = "description",
+           div(class = "side-panel-description",
              HTML("<a href='http://www.savethesound.org' style='color:#ffffff'>Go Back!</a>")
            ),
-           div(  class = "description",
+           div(  class = "side-panel-description",
                  
                  #Text output for Action Count (See output$DescriptionParagrah Render block in Server Side)
                  
@@ -78,7 +78,7 @@ ui <- fluidPage(theme = "styler.css",
                  #        precious natural resource.
                      )
            ),
-           div(  class = "description",
+           div(  class = "side-panel-description",
                  
                  #Text output for Action Count (See output$ActionCount Render Block in Server Side)
                  textOutput("ActionCount"),
