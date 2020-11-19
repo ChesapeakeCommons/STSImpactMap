@@ -306,6 +306,15 @@ p {
       /*margin-left: var(--m-sidebar-width) ;
       */
   }
+  .key-overlay-container{
+    display:none !important;
+  }
+  .key-overlay{
+    display:none !important;
+  }
+  .key-image{
+     display:none !important;
+  }
   
 }
 
