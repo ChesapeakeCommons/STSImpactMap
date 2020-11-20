@@ -203,7 +203,7 @@ p {
   background-color: #ffffff;
   position: absolute; 
   left: -25%;
-  display:block;
+  display:block !important;
   bottom: 26px;
    z-index: 800;
     margin: 0 auto;
@@ -275,6 +275,7 @@ p {
  position: absolute; 
  right: 57px;
  bottom: 140px;
+ display: block !important;
 }
 .compass-overlay{
   min-width: 72px;
@@ -362,6 +363,10 @@ p {
   .key-overlay-container{
     display:none !important;
   }
+  .compass-overlay-container{
+     display:none !important;
+  }
+  
   .key-overlay{
     display:none !important;
   }

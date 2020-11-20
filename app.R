@@ -36,14 +36,14 @@ ui <- fluidPage(theme = "styler.css",
       div(id = "main-panel",
           
           leafletOutput("leafmap"),
-          div( class= "key-overlay-container hide",
+          div( class= "key-overlay-container",
               div(class = "key-overlay",
                   div(class="key-text",
                       HTML("Key")),
                   div(class="key-image")
               )
           ),
-          div( class ="compass-overlay-container hide",
+          div( class ="compass-overlay-container",
                div( class="compass-overlay")
           )
           
