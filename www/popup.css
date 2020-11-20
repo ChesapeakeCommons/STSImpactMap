@@ -37,11 +37,11 @@
   border: 0px solid blue;
   float: left;
   display: block;
-  
+  z-index: 1000;
 }
 .popup-title-marker{
-  width: 47px !important;
-  height: 47px !important;
+  width: 47px;
+  height: 47px;
   border: 0px solid green;
   float: left;
   display: block;
@@ -55,8 +55,8 @@
 }
 
 .popup-title-h1{
-  border:0px solid red; 
-  width: 70%; 
+  border:0px solid red;
+  width: 70%;
   float:left; 
   display:block; 
   font-size: 20px; 
@@ -65,8 +65,8 @@
 .popup-title-h2{
   line-height: 14px; 
   border:0px solid red; 
-  width: 70%; 
-  float:left; 
+  width: 70%;
+  float:left;
   display:block; 
   font-size: 15px; 
   font-weight: normal;
@@ -96,6 +96,7 @@
   min-height: 240px;
   overflow: hidden;
   display: block;
+  z-index: 300;
   float: left;
   text-align: center;
   border:0px solid green;
@@ -123,16 +124,28 @@
   float: left;
   border:0px solid pink;
   direction:ltr;
-  
+
+}
+  .popup-line-description{
+    line-height:15px;
+    display:inline-block;
+    overflow:hidden;
+    text-overflow: ellipsis;
+  }
+
+
+.marker-resize-01 {
+  width: 95px !important;
+  height: 41px !important;
+  margin-right: 0px;
+}
+.marker-resize-02 {
+  width: 47px !important;
+  height: 47px !important;
 }
 /*END KEY POPUP*/
 
-  .popup-line-description{
-    line-height:15px; 
-    display:inline-block; 
-    overflow:hidden; 
-    text-overflow: ellipsis; 
-  }
+
 
 @media only screen and (max-width: 832px) {
 
@@ -165,8 +178,8 @@
   }
 
   .marker-resize-01 {
-    width: 56px !important;
-    height: 25px !important;
+    width: 46px !important;
+    height: 20px !important;
   }
    .marker-resize-02 {
     width: 24px !important;
@@ -185,6 +198,10 @@
     line-height: 1;
   }
   .no-left-margin{
-    margin-left: 0px;
+    margin-left: 0px !important;
+  }
+  .popup-title-marker{
+
+
   }
 }

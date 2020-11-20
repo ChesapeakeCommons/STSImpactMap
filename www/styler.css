@@ -1,4 +1,4 @@
-
+@import url("https://fonts.googleapis.com/css?family=Mansarat");
 @import "popup.css"; /* Using a string */
 
 /*
@@ -32,6 +32,7 @@ body
   color:#ffffff;
   font-weight: 300;  
   background-color: #444444;
+    font-family: 'Mansarat',sans-serif !important;
 
   
 }
@@ -167,7 +168,7 @@ p {
     margin: 0 auto;
     /*width: 265px;*/
     margin-top:20px;
-    text-align: just;
+    text-align: justify;
 }
 
 .btn {
@@ -241,42 +242,34 @@ p {
 
 /*END KEY OVERLAY*/
 
-
 /*Changing Marker Cluster Color to Grey */
-/*
+
 .leaflet-marker-icon.marker-cluster.marker-cluster-small.leaflet-zoom-animated.leaflet-interactive {
-    width: 10px;
-    height: 10px;
-  background-color: rgb(224,225,231);
-  }
+    background-color: rgba(128,128,128,0.5);
+}
 .leaflet-marker-icon.marker-cluster.marker-cluster-small.leaflet-zoom-animated.leaflet-interactive div {
-    width: 10px;
-    height: 10px;
-  background-color: rgb(224,225,231);
-  }
-
+    background-color: rgba(128,128,128,0.5);
+}
 .leaflet-marker-icon.marker-cluster.marker-cluster-medium.leaflet-zoom-animated.leaflet-interactive {
-    width: 10px;
-    height: 10px;
-  background-color: rgb(224,225,231);
-  }
-.leaflet-marker-icon.marker-cluster.marker-cluster-medium.leaflet-zoom-animated.leaflet-interactive div {
-    width: 10px;
-    height: 10px;
-  background-color: rgb(224,225,231);
-  }
-
+    background-color: rgba(128,128,128,0.5);
+}
+.leaflet-marker-icon.marker-cluster.marker-cluster-medium.leaflet-zoom-animated.leaflet-interactive div{
+    background-color: rgba(128,128,128,0.5);
+}
 .leaflet-marker-icon.marker-cluster.marker-cluster-large.leaflet-zoom-animated.leaflet-interactive {
-    width: 10px;
-    height: 10px;
-  background-color: rgb(224,225,231);
-  }
-.leaflet-marker-icon.marker-cluster.marker-cluster-large.leaflet-zoom-animated.leaflet-interactive div {
-    width: 10px;
-    height: 10px;
-  background-color: rgb(224,225,231);
-  }
-/*
+    background-color: rgba(128, 128, 128, 0.5);
+}
+.leaflet-marker-icon.marker-cluster.marker-cluster-large.leaflet-zoom-animated.leaflet-interactive div{
+    background-color: rgba(128,128,128,0.5);
+}
+
+
+.shiny-disconnected-overlay{
+    background-image: url('http://45.79.180.26/share/sts-images/Icon_Soundkeeper_05.png');
+
+}
+
+
 /*START COMPASS OVERLAY*/
 .compass-overlay-container{
  position: absolute; 
