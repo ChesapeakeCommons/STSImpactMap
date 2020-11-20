@@ -137,7 +137,7 @@
 .marker-resize-01 {
   width: 95px !important;
   height: 41px !important;
-  margin-right: 0px;
+  margin-right: 5px;
 }
 .marker-resize-02 {
   width: 47px !important;
@@ -180,6 +180,7 @@
   .marker-resize-01 {
     width: 46px !important;
     height: 20px !important;
+    margin-right: 0px;
   }
    .marker-resize-02 {
     width: 24px !important;
