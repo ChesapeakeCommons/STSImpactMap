@@ -100,10 +100,7 @@ ui <- fluidPage(theme = "styler.css",
            
            
       )
-  ),
-  tags$script(HTML(
-    "document.getElementsByClassName( 'leaflet-control-attribution' )[0].style.display = 'none';"
-  )),
+  )
 )
 ########## Server Side Script ############
 
