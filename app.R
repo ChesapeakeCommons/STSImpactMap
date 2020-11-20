@@ -25,7 +25,7 @@ library(stringr)
 ###########  UI Display Script ############
 ui <- fluidPage(theme = "styler.css",
   #(theme = "styler.css",
-  
+ 
   
   ### DISPLAY COMPONENTS ###
 
@@ -36,14 +36,14 @@ ui <- fluidPage(theme = "styler.css",
       div(id = "main-panel",
           
           leafletOutput("leafmap"),
-          div( class= "key-overlay-container",
+          div( class= "key-overlay-container hide",
               div(class = "key-overlay",
                   div(class="key-text",
                       HTML("Key")),
                   div(class="key-image")
               )
           ),
-          div( class ="compass-overlay-container",
+          div( class ="compass-overlay-container hide",
                div( class="compass-overlay")
           )
           
@@ -52,6 +52,7 @@ ui <- fluidPage(theme = "styler.css",
       # Side Panel Display with Save the Sound Info
   ),
   div(id = "side-panel",
+      HTML("<a href='http://www.savethesound.org' style='color:#ffffff'>"),
       div(  id = "title"
         #    img(    id = 'title-image',
          #           src='images/save-the-sound-title-02.png'
@@ -59,9 +60,10 @@ ui <- fluidPage(theme = "styler.css",
             
             #Descriptive Text 
       ),
+      HTML("</>"),
      
       div( id = "side-panel-wrapper",
-           div(class = "side-panel-description",
+           div(class = "side-panel-description hide",
              HTML("<a href='http://www.savethesound.org' style='color:#ffffff'>Go Back!</a>")
            ),
            div(  class = "side-panel-description",
@@ -69,26 +71,26 @@ ui <- fluidPage(theme = "styler.css",
                  #Text output for Action Count (See output$DescriptionParagrah Render block in Server Side)
                  
                #  tags$h1("2020 Action Map"),
-                  tags$p(
+                #  tags$p(
                   textOutput("DescriptionParagraph")
                  #        The waters of Long Island Sound
                  #        touch the lives of millions in
                  #        New York, Connecticut, and beyond.
                  #        Together, we can protect this
                  #        precious natural resource.
-                     )
+              #       )
            ),
            div(  class = "side-panel-description",
                  
                  #Text output for Action Count (See output$ActionCount Render Block in Server Side)
                  textOutput("ActionCount"),
                  #tags$h1("200+"),
-                 tags$p(style="margin-top:5px;",
+             #    tags$p(style="margin-top:5px;",
                  #Text output for Action Count (See output$DescriptionSentence Render Block in Server Side)
                  textOutput("DescriptionSentence")
                   
                 #   HTML("<font style='font-weight: 400;'>Efforts to improve the</font> Long Island Sound")
-                 )
+            #     )
            ),
            #Filter output block - see output$Filters for rendering code
            div(
@@ -96,8 +98,12 @@ ui <- fluidPage(theme = "styler.css",
             uiOutput("Filters")
            ),
            
+           
       )
-  )
+  ),
+  tags$script(HTML(
+    "document.getElementsByClassName( 'leaflet-control-attribution' )[0].style.display = 'none';"
+  )),
 )
 ########## Server Side Script ############
 
@@ -376,7 +382,10 @@ server <- function(input, output, session) {
     url <- as.character(ActionSelection()$Marker)
     w <- str_remove_all(ActionSelection()$Width, "[px]")
     h <- str_remove_all(ActionSelection()$Height, "[px]")
-    print(w)
+    print("width")
+     print(w)
+     print("height")
+    print(h)
     mapIcon <- makeIcon(
       iconUrl = url,
       iconWidth = w, iconHeight = h)

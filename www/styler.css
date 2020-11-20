@@ -13,16 +13,42 @@ body
   height: 100%;
   color:#ffffff;
   font-weight: 300;  
-  background-color: #000000;
+  background-color: #444444;
+
+  
+}
+
+#background{
+  	min-height: 100%;
+    min-width: calc(100% - 180px);
+    	margin-left: 165px;
+    display: inline-block;
+    position: relative;
+
   
 }
 
 #main-panel
 {
-	height: 100%;
+    z-index: 0;
+
+	height: 100vh;
     width: calc(100% - 180px);
 	margin-left: 165px;
-	background-color: #000000;
+
+    background-image: url("images/logo-white.png");
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: max(50%, calc(35% + 315px))  50%;
+    background-size: 10%;
+    background-color: #444444;
+
+    /*
+    background-position: min(300px, 70%) 50%;
+    background-position: calc(50% + 150px)  50%;
+    */
+
+
 }
 
 
@@ -63,6 +89,7 @@ body
     left: 0px;
     border: 0px solid green;
 
+
 }
 
 #leafmap {
@@ -93,7 +120,7 @@ body
 }
 */
 #title {
-  background-image: url('images/save-the-sound-title-06.png');
+  background-image: url('images/save-the-sound-title-08.png');
   background-size: cover;
   min-height:80px;
   width:100%;
@@ -171,7 +198,7 @@ p {
    z-index: 800;
     margin: 0 auto;
    
-    border:2px solid rgba(0,50,50,35%);
+    border:2px solid rgba(50,50,50,0.35);
     border-top-left-radius: 5px;
    border-bottom-left-radius: 5px;
    border-top-right-radius: 5px;
@@ -205,21 +232,9 @@ p {
 
 /*END KEY OVERLAY*/
 
-/*START COMPASS OVERLAY*/
-.compass-overlay-container{
- position: absolute; 
- right: 57px;
- bottom: 140px;
-}
-.compass-overlay{
-  min-width: 72px;
-  min-height: 82px;
-  background-image: url('images/CompassRose.png');
-  background-size: cover;
-}
 
 /*Changing Marker Cluster Color to Grey */
-
+/*
 .leaflet-marker-icon.marker-cluster.marker-cluster-small.leaflet-zoom-animated.leaflet-interactive {
     width: 10px;
     height: 10px;
@@ -252,7 +267,19 @@ p {
     height: 10px;
   background-color: rgb(224,225,231);
   }
-
+/*
+/*START COMPASS OVERLAY*/
+.compass-overlay-container{
+ position: absolute; 
+ right: 57px;
+ bottom: 140px;
+}
+.compass-overlay{
+  min-width: 72px;
+  min-height: 82px;
+  background-image: url('images/CompassRose.png');
+  background-size: cover;
+}
 
 /*END COMPASS OVERLAY*/
 
@@ -273,16 +300,39 @@ p {
     
   }
   .form-control{
-    width:80%;
+    width:90%;
   }
-  
+
+    .selectize-input {
+        font-size: 10px;
+        line-height: 15px;
+        padding-top: 2px !important;
+        padding-right: 4px !important;
+        padding-bottom: 2px !important;
+        padding-left: 4px !important;
+        min-height: 16px !important;
+    }
+    .form-control{
+        font-size: 10px;
+    }
+    .selectize-control{
+        margin-bottom: 0px;
+        height: 24px;
+
+    }
+
   #main-panel {
     left: 0px;
     width: 100%;
+      background-position: max(50%, calc(30% + 150px))  50%;
+      background-size: 20%;
+
     
   }
   #side-panel {
-      width: clamp(100px, 20%, 256px)!important;
+      width: clamp(150px, 20%, 256px)!important;
+      overflow-y: scroll;
+      overflow-x: hidden;
      /* width: 20% !important;*/
       
   }
@@ -290,6 +340,7 @@ p {
      width: 100% !important;
      margin-left: 5%;
      margin-right: 5%;
+     margin-top: 10px;
   }
   .side-panel-description{
     width: 90%;
@@ -315,6 +366,36 @@ p {
   .key-image{
      display:none !important;
   }
-  
+  .side-panel-description{
+    width: 90%;
+    margin-bottom: 4px;
+    
+  } 
+  .filters{
+   
+    margin-top: 10px;
+  }
+  .shiny-input-container{
+    margin-bottom: 2px;
+  }
+
+  .hide{
+   /*   display: none;
+   */
+  }
+  #title{
+      
+      height: 10%;
+      min-height:30px;
+      max-height: 35px;
+    
+  }
+  .leaflet-control-attribution{
+
+      z-index: 100 !important;
+      display: none !important;
+
+  }
+
 }
 
