@@ -17,7 +17,6 @@
 /*
 scrollbar-width: none;  /* Firefox */
 /*
-  
 }
 */
 
@@ -398,6 +397,10 @@ p {
       z-index: 100 !important;
       display: none !important;
 
+  }
+  .side-panel-goback {
+    display:none;
+    
   }
 
 }

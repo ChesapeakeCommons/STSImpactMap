@@ -63,7 +63,7 @@ ui <- fluidPage(theme = "styler.css",
       HTML("</>"),
      
       div( id = "side-panel-wrapper",
-           div(class = "side-panel-description hide",
+           div(class = "side-panel-description side-panel-goback",
              HTML("<a href='http://www.savethesound.org' style='color:#ffffff'>Go Back!</a>")
            ),
            div(  class = "side-panel-description",
