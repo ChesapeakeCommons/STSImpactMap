@@ -403,5 +403,10 @@ p {
     
   }
 
+    .leaflet-pane.leaflet-tooltip-pane{
+        display:none;
+
+    }
+
 }
 
