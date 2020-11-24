@@ -46,7 +46,8 @@
   float: left;
   display: block;
   background-size: cover;
-
+  margin-left: -6px;
+  margin-right: 2px;
   
 }
 .popup-title-text{
@@ -56,7 +57,7 @@
 
 .popup-title-h1{
   border:0px solid red;
-  width: 70%;
+ /* width: 70%;*/
   float:left; 
   display:block; 
   font-size: 20px; 
@@ -65,11 +66,12 @@
 .popup-title-h2{
   line-height: 14px; 
   border:0px solid red; 
-  width: 70%;
+  /*width: 70%;*/
   float:left;
   display:block; 
   font-size: 15px; 
   font-weight: normal;
+  overflow-x: ellipsis;
 }
 .pu-h2-adj{
   width: 100%;
@@ -150,7 +152,7 @@
 @media only screen and (max-width: 832px) {
 
   .leaflet-popup{
-    width:256px;
+    width:260px;
   }
   .popup-wrapper{
 
@@ -166,9 +168,9 @@
     min-height: 120px;
   }
   .popup-text {
-    width: 176px;
+    width: 180px;
     display: block;
-    padding: 2px 6px 2px 6px;
+    padding: 2px 2px 2px 6px;
     max-height: 120px;
   }
 
@@ -202,6 +204,8 @@
     margin-left: 0px !important;
   }
   .popup-title-marker{
+     margin-left: -4px;
+    margin-right: 0px;
 
 
   }
