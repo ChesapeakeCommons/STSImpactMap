@@ -110,11 +110,11 @@ server <- function(input, output, session) {
   # this lets us bypass the Authorization step from gsheet4 if they are ok with just having the googlesheet be public - I can hook it up to be private though after the fact.
   gs4_deauth()
   
-  Data_Test_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/10VMsQ57EL25gDjb7bAEjOZDI2mEWiOkIoHwHWNW0MOE/edit#gid=0")
+  Data_Test_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1Hf6V-pWunsaA1Vt3tvvf12D0G5MwFKCe61SIr1sVAfg/edit#gid=0")
   
   ZoomExtent_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1viLwGCnhsdhfgsgIHjYYj6INNu7YqG_h8srlQsCNf6Y/edit#gid=0")
   
-  Symbology_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1N0L7-gZH4iqxrbQVYLtLJU7Dbuz2nVnYE-8wUrzPK6o/edit#gid=0")
+  Symbology_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1R5wLQGimKxDGNhMm5NSZLcHM36qFwtdiPzvNmyq2C60/edit#gid=0")
   
   Text_Input_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1zOnGKfYbfOH7C6Dp1BjkpVOd6WenxViqk490DlLbcuI/edit#gid=0")
   
