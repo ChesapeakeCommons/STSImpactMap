@@ -461,7 +461,7 @@ server <- function(input, output, session) {
                                 )) , 
                               "'><b>",ActionSelection()$KeyMetric2,":</b> ",ActionSelection()$Value2,"</span>",
                             "<span class='popup-line",
-                                  (ifelse((ActionSelection()$Url == 'NULL')|(is.na(ActionSelection()$Url)),
+                                  (ifelse((ActionSelection()$Url == '')|(is.na(ActionSelection()$Url)),
                                           paste("hide"),
                                           paste("")
                                   )) , 
@@ -493,14 +493,11 @@ server <- function(input, output, session) {
           leafletProxy("leafmap")%>%
           setView(lng = ZoomSelection()$Longitude, lat = ZoomSelection()$Latitude, zoom = ZoomSelection()$Zoom)
          })
-  
-  
-  
-
-  
-  
-}
   #### END MAP #####
+  
+  
+          }
+
   
 
 
