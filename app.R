@@ -427,7 +427,7 @@ server <- function(input, output, session) {
                                 paste("marker-resize-01"),
                                 paste("marker-resize-02")
                           )) ,
-                              "' style='height:", ActionSelection()$Height,"; width:",ActionSelection()$Width,"; background-image:url(\"",ActionSelection()$Marker,"\");'>",
+                              "' style='margin-right:6px;", ActionSelection()$Height,"; width:",ActionSelection()$Width,"; background-image:url(\"",ActionSelection()$Marker,"\");'>",
                         "</div>",
                           "<div class='popup-title-text'>",
                             "<span class='popup-title-h1' style=''>", ActionSelection()$Action, "</span>",
