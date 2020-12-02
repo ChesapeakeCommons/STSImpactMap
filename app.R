@@ -474,8 +474,8 @@ server <- function(input, output, session) {
                                           paste("hide"),
                                           paste("")
                                   )) , 
-                              "'><b>LOCATION:</b>",ActionSelection()$LocationName,"</span>",
-                              "<span class='popup-line popup-line-adj'><b>LAT:</b>",ActionSelection()$LAT,"&nbsp; <b>LONG:</b>",ActionSelection()$LONG,"</span>",
+                              "'><b>Location:</b>",ActionSelection()$LocationName,"</span>",
+                              "<span class='popup-line popup-line-adj'><b>Lat:</b>",ActionSelection()$LAT,"&nbsp; <b>Long:</b>",ActionSelection()$LONG,"</span>",
                                
                             "</span>",
                         "</div>",
