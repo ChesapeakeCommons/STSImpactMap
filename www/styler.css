@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css?family=Mansarat");
+@import url("https://fonts.googleapis.com/css?family=Montserrat");
 @import "popup.css"; /* Using a string */
 
 
@@ -27,7 +27,7 @@ body
   color:#ffffff;
   font-weight: 300;  
   background-color: #444444;
-    font-family: 'Mansarat',sans-serif !important;
+    font-family: 'Montserrat',sans-serif !important;
 
   
 }
@@ -133,7 +133,7 @@ body
 }
 */
 #title {
-  background-image: url('images/save-the-sound-title-08.png');
+  background-image: url('images/save-the-sound-title-09.png');
   background-size: cover;
   min-height:80px;
   width:100%;
