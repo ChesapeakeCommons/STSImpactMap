@@ -214,7 +214,7 @@ p {
 
 .key-image{
    background-size: cover;
-    background-image: url('images/key2.png');
+    background-image: url('https://www.savethesound.org/wp-content/uploads/2020/11/key2.png');
     width:500px; 
     height:70px;
     float: right;
@@ -260,7 +260,7 @@ p {
 
 
 .shiny-disconnected-overlay{
-    background-image: url('http://45.79.180.26/share/sts-images/Icon_Soundkeeper_05.png');
+    background-image: url('https://www.savethesound.org/wp-content/uploads/2020/11/Boat.png');
 
 }
 
@@ -275,7 +275,7 @@ p {
 .compass-overlay{
   min-width: 72px;
   min-height: 82px;
-  background-image: url('images/CompassRose.png');
+  background-image: url('https://www.savethesound.org/wp-content/uploads/2020/11/CompassRose.png');
   background-size: cover;
 }
 

@@ -3,10 +3,15 @@
 # Github: https://github.com/ChesapeakeCommons/R-Shiny
 # Created by Gabe Watson for The Commons 
 # Created 7.20.2020 
-# Last edited: 9.21.2020 
+# Last edited: 11.21.2020 
 # Naming Convention  
 #   - Major_Components_Name minor_componentsName, MajorVariable minorvariable 
-#   
+# Sections 
+#   #Display Components
+#   #Data importing 
+#   #Data processing 
+#   #Filtering 
+#   #Map Rendering
 
 library(shiny)
 library(googlesheets4)
@@ -24,14 +29,10 @@ library(sp)
 library(stringr)
 ###########  UI Display Script ############
 ui <- fluidPage(theme = "styler.css",
-  #(theme = "styler.css",
- 
-  
-  ### DISPLAY COMPONENTS ###
 
+ 
+  ### DISPLAY COMPONENTS ###
   div(id = "wrapper",
-      
-      
       #Map
       div(id = "main-panel",
           
@@ -46,19 +47,15 @@ ui <- fluidPage(theme = "styler.css",
           div( class ="compass-overlay-container",
                div( class="compass-overlay")
           )
-          
       )
       
-      # Side Panel Display with Save the Sound Info
+  # Side Panel Display with Save the Sound Info
   ),
   div(id = "side-panel",
       HTML("<a href='http://www.savethesound.org' style='color:#ffffff'>"),
       div(  id = "title"
-        #    img(    id = 'title-image',
-         #           src='images/save-the-sound-title-02.png'
-        #    )
             
-            #Descriptive Text 
+      #Descriptive Text 
       ),
       HTML("</>"),
      
@@ -67,121 +64,104 @@ ui <- fluidPage(theme = "styler.css",
              HTML("<a href='http://www.savethesound.org' style='color:#ffffff'>Go Back!</a>")
            ),
            div(  class = "side-panel-description",
-                 
-                 #Text output for Action Count (See output$DescriptionParagrah Render block in Server Side)
-                 
-               #  tags$h1("2020 Action Map"),
-                #  tags$p(
                   textOutput("DescriptionParagraph")
-                 #        The waters of Long Island Sound
-                 #        touch the lives of millions in
-                 #        New York, Connecticut, and beyond.
-                 #        Together, we can protect this
-                 #        precious natural resource.
-              #       )
            ),
            div(  class = "side-panel-description",
                  
                  #Text output for Action Count (See output$ActionCount Render Block in Server Side)
                  textOutput("ActionCount"),
-                 #tags$h1("200+"),
-             #    tags$p(style="margin-top:5px;",
-                 #Text output for Action Count (See output$DescriptionSentence Render Block in Server Side)
                  textOutput("DescriptionSentence")
-                  
-                #   HTML("<font style='font-weight: 400;'>Efforts to improve the</font> Long Island Sound")
-            #     )
            ),
            #Filter output block - see output$Filters for rendering code
            div(
             class='filters',
             uiOutput("Filters")
            ),
-           
-           
       )
   )
 )
 ########## Server Side Script ############
-
 server <- function(input, output, session) {
   
   ##### DATASET IMPORT ####
   # this lets us bypass the Authorization step from gsheet4 if they are ok with just having the googlesheet be public - I can hook it up to be private though after the fact.
   gs4_deauth()
   
-  Data_Test_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1Hf6V-pWunsaA1Vt3tvvf12D0G5MwFKCe61SIr1sVAfg/edit#gid=0")
+  #Raw Data
+  Import <- read_sheet("https://docs.google.com/spreadsheets/d/1Hf6V-pWunsaA1Vt3tvvf12D0G5MwFKCe61SIr1sVAfg/edit#gid=0")
   
+  #Zoom Extent
   ZoomExtent_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1viLwGCnhsdhfgsgIHjYYj6INNu7YqG_h8srlQsCNf6Y/edit#gid=0")
   
+  #Symbology
   Symbology_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1R5wLQGimKxDGNhMm5NSZLcHM36qFwtdiPzvNmyq2C60/edit#gid=0")
   
+  #Descriptive Text 
   Text_Input_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1zOnGKfYbfOH7C6Dp1BjkpVOd6WenxViqk490DlLbcuI/edit#gid=0")
   
-  ## Merging input dataset with Symbology datatest
-  Data_Test_V1 <- merge(Data_Test_V1,Symbology_V1, all.x = TRUE)
- 
+  #Boat geoJSON
+  STS_Boat <- rgdal::readOGR("www/STS_Boat_v6.geojson")
   
 
+ 
+         #### END IMPORT ####
+  ## ****************************# 
+  #### IMPORT DATA MOTIFICATIONS #### 
+
+  ## Merging input dataset with Symbology datatest
+  Import <- merge(Import,Symbology_V1, all.x = TRUE)
   
   #### Block for calculating year span for uncompleted projects #### 
-
-  Data_Test_V1$Status <- ""
-  Data_Test_V1$Span <- 1
+  Import$Status <- ""
+  Import$Span <- 1
   
   #Loops through set and checks to see if data contains both start and end year 
   #If dif between start and end year are greater than 1, calculates delta between years 
-  for (row in 1:nrow(Data_Test_V1))
+  for (row in 1:nrow(Import))
   {
-    if(Data_Test_V1$YearComplete[row] == "x")
+    if(Import$YearComplete[row] == "x")
     {
-      Data_Test_V1$Status[row] <- "On Going"
+      Import$Status[row] <- "On Going"
     }
   else
     {
-     Data_Test_V1$Span[row] <- (as.numeric(Data_Test_V1$YearComplete[row]) - as.numeric(Data_Test_V1$Year[row])) + 1
-     Data_Test_V1$Status[row] <- "Complete"
+     Import$Span[row] <- (as.numeric(Import$YearComplete[row]) - as.numeric(Import$Year[row])) + 1
+     Import$Status[row] <- "Complete"
     }
   }
 
   #Converts year variables to numeric
-  Data_Test_V1$YearComplete <- as.numeric(Data_Test_V1$YearComplete)
-  Data_Test_V1$Year <- as.numeric(Data_Test_V1$Year)
+  Import$YearComplete <- as.numeric(Import$YearComplete)
+  Import$Year <- as.numeric(Import$Year)
   
   
   #Loops throug and adds additional layers
-  Data_Test_V2 <- Data_Test_V1[rep(row.names(Data_Test_V1), Data_Test_V1$Span), 1:23]
+  MapData <- Import[rep(row.names(Import), Import$Span), 1:22]
               
   #Changes the start year 
-  Data_Test_V2$Count <- ave(Data_Test_V2$Year, Data_Test_V2$ProjectName, FUN = seq_along)
+  MapData$Count <- ave(MapData$Year, MapData$ProjectName, FUN = seq_along)
   
   #Corrects the math
-  Data_Test_V2$Year <- Data_Test_V2$Year - 1 + Data_Test_V2$Count
-  #print(Data_Test_V2)
+  MapData$Year <- MapData$Year - 1 + MapData$Count
+
   
-  #Checks to see if image link is NA - if so puts in placeholder image
-  for(row in 1:nrow(Data_Test_V2))
+  #Checks to see if image link is NA - if so puts in placeholder image sourced from the symbology sheet 
+  for(row in 1:nrow(MapData))
   {
-   if(is.na(Data_Test_V2$Image[row]))
+   if(is.na(MapData$Image[row]))
      {
-       Data_Test_V2$Image[row] <- "https://live.staticflickr.com/65535/50576736566_42904e1bd5_k.jpg"
+       MapData$Image[row] <- Symbology_V1$Marker[9]
     }
   }
+
+
+   #Converting all characters to factors, and setting NAs to blank
+   MapData <- MapData %>%
+   mutate_if(is.character, as.factor)
   
-  Data_Test_V2 <- Data_Test_V2 %>%
-    mutate_if(is.character, as.factor)
+   MapData[is.na(MapData)] = ""
+   MapData[is.null(MapData)] = ""
   
-   Data_Test_V2[is.na(Data_Test_V2)] = ""
-  Data_Test_V2[is.null(Data_Test_V2)] = ""
-  
-  print(Data_Test_V2)
-#  Data_Test_V2[Data_Test_V2 == ""]<-NA
-  # 
-  # for(row in 1:nrow(Data_Test_V2))
-  # {
-  #   if(is.na(Data_Test_V2$)
-  # }
-  #  
   
   #Dynamic Text Paragraph
   output$DescriptionParagraph <- renderText({
@@ -197,37 +177,35 @@ server <- function(input, output, session) {
   output$DescriptionSentence <- renderText({
     Text_Input_V1$DescriptionSentence
   })
-  #### END DATASETIMPORT #####
   
+ #### END IMPORT DATA MOTIFICATIONS ####
+    ## ****************************## 
+          #### FILTERS #### 
+  
+  #Original Render for filters 
   output$Filters <- renderUI({
-  #  test <- ActionSelection()$YearComplete
-    req(Data_Test_V2)
+    req(MapData)
     req(ZoomExtent_V1)
-    #Zoom Selction 
     tagList(
       #Action Selection
-      selectizeInput("inActionSelector", "Filter by Action:",
-                     choices = Data_Test_V2$Action, multiple = TRUE, options = list(placeholder = 'All Actions')),
+      selectizeInput("inActionSelector", "Search by Action:",
+                     choices = MapData$Action, multiple = TRUE, options = list(placeholder = 'All Actions')),
       
       #Sub Action Selection
-      selectizeInput("inSubActionSelector", "Filter by Sub Action:",
-                     choices = Data_Test_V2$SubAction, multiple = TRUE, options = list(placeholder = 'All Sub Actions')),
+      selectizeInput("inSubActionSelector", "Search by Sub Action:",
+                     choices = MapData$SubAction, multiple = TRUE, options = list(placeholder = 'All Sub Actions')),
       
+      # Year
+      selectizeInput("inYearSelector", "Search by Year:",
+                     choices = MapData$Year, multiple = TRUE, selected = 2020),
       
-      selectizeInput("inYearSelector", "Filter by Year:",
-                     choices = Data_Test_V2$Year, multiple = TRUE, selected = 2020),
-      
-      
+      # Zoom
       selectizeInput("inZoomSelector", "Zoom to:",
                      choices = ZoomExtent_V1$Extent, multiple = FALSE)
     )
   })
   
-  #### ACTION INPUT DATA HANDLING ###
-  
-  
-  
-  
+  #### FILTER INPUT DATA HANDLING ###
   # Reactive element that gets the correct Layer Selection and returns "ActionSelection()" for use in mapping from Action Selector
   ActionSelection <- reactive ({
     
@@ -240,7 +218,7 @@ server <- function(input, output, session) {
     #Sets dataframe to all Actions and All years if no selection is chosen
     if (length(x) == 0 && length(y) == 0 && length(z) == 0)
     {
-      Layers <- Data_Test_V2
+      Layers <- MapData
       updateSelectizeInput(session, "inActionSelector",
                            choices = sort(Layers$Action))
       updateSelectizeInput(session, "inSubActionSelector",
@@ -252,7 +230,7 @@ server <- function(input, output, session) {
     #Updates Subaction and Year selection when only Action is chosen
     if (length(x) > 0 && length(y) == 0 && length(z) == 0 )
     {
-      Layers <- filter(Data_Test_V2, Action %in% x)  
+      Layers <- filter(MapData, Action %in% x)  
       updateSelectizeInput(session, "inSubActionSelector",
                            choices = sort(Layers$SubAction))
       updateSelectizeInput(session, "inYearSelector",
@@ -262,7 +240,7 @@ server <- function(input, output, session) {
     # Updates Year when Action and SubAction are selected
     if (length(x) > 0 && length(y) > 0 && length(z) == 0)
     {
-      Layers <- filter(Data_Test_V2, Action %in% x)
+      Layers <- filter(MapData, Action %in% x)
       Layers <- filter(Layers, SubAction %in% y)
       updateSelectizeInput(session, "inYearSelector",
                            choices = sort(Layers$Year, decreasing = TRUE))
@@ -271,7 +249,7 @@ server <- function(input, output, session) {
     # Updates Action and Year when SubAction is Selected
    if (length(x) == 0 && length(y) > 0 && length(z) == 0)
     {
-     Layers <- filter(Data_Test_V2, SubAction %in% y) 
+     Layers <- filter(MapData, SubAction %in% y) 
      updateSelectizeInput(session, "inActionSelector",
                           choices = sort(Layers$Action))
      updateSelectizeInput(session, "inYearSelector",
@@ -281,7 +259,7 @@ server <- function(input, output, session) {
     #Updates Action when SubAction and Year are selected
     if (length(x) == 0 && length(y) > 0 && length(z) > 0)
     {
-      Layers <- filter(Data_Test_V2, SubAction %in% y)
+      Layers <- filter(MapData, SubAction %in% y)
       Layers <- filter(Layers, Year %in% z)
       updateSelectizeInput(session, "inActionSelector",
                            choices = sort(Layers$Action))
@@ -290,7 +268,7 @@ server <- function(input, output, session) {
     #Updates Action and Subaction when Year is selected
     if (length(x) == 0 && length(y) == 0 && length(z) > 0)
     {
-      Layers <- filter(Data_Test_V2, Year %in% z)
+      Layers <- filter(MapData, Year %in% z)
       updateSelectizeInput(session, "inActionSelector",
                            choices = sort(Layers$Action))
       updateSelectizeInput(session, "inSubActionSelector",
@@ -300,7 +278,7 @@ server <- function(input, output, session) {
     #Updates Subaction when Action and Year are selected
     if (length(x) > 0 && length(y) == 0 && length(z) > 0)
     {
-      Layers <- filter(Data_Test_V2, Action %in% x)
+      Layers <- filter(MapData, Action %in% x)
       Layers <- filter(Layers, Year %in% z)
 
       updateSelectizeInput(session, "inSubActionSelector",
@@ -310,7 +288,7 @@ server <- function(input, output, session) {
     #No update, just filters when all are selected 
     if (length(x) > 0 && length(y) > 0 && length(z) > 0)
     {
-      Layers <- filter(Data_Test_V2, Action %in% x)
+      Layers <- filter(MapData, Action %in% x)
       Layers <- filter(Layers, SubAction %in% y)
       Layers <- filter(Layers, Year %in% z)
       return(Layers)
@@ -337,22 +315,16 @@ server <- function(input, output, session) {
     return(ZoomChoice)
   })
   
-  #### END INPUT DATA HANDLING ###
-  
-  
- #  geojson <- reactive({
-   # STS_Boat_Raw <- system.file("www/STS_Boat.kml", package = "leaflet.extras")
-    #STS_Boat_Kml <- readr::read_file(STS_Boat_Raw)
-  
-  STS_Boat <- rgdal::readOGR("www/STS_Boat_v6.geojson")
 
- #  })
+  
+        #### END FILTERS ####
+  ## ****************************## 
+      #### MAP RENDERING  #### 
+  
   
   ##### MAP ####
   #This creates the original drawing of the map, observeEvents below update only the dataframe and zoom extent such that the map does not completely re render
   output$leafmap <- renderLeaflet({
-
-    
      leaflet(options = leafletOptions(zoomControl = FALSE)) %>%
        addPolygons(data = STS_Boat, fill = FALSE, weight = 2, dashArray = "5", color = "grey") %>%
        addProviderTiles("CartoDB.VoyagerLabelsUnder", group = "Streets") %>%
@@ -373,16 +345,11 @@ server <- function(input, output, session) {
 #This updates the map based on the changes in the selected data such that the map doesn't need to redraw every time
   observeEvent(ActionSelection(),
     {
-
-    
     #Creating Map Markers with URL (Will likely store this information in an Action only sheet and then join to layers in program after data importing)
     url <- as.character(ActionSelection()$Marker)
     w <- str_remove_all(ActionSelection()$Width, "[px]")
     h <- str_remove_all(ActionSelection()$Height, "[px]")
-    print("width")
-     print(w)
-     print("height")
-    print(h)
+    
     mapIcon <- makeIcon(
       iconUrl = url,
       iconWidth = w, iconHeight = h)
@@ -390,18 +357,16 @@ server <- function(input, output, session) {
       # Creating Popup Image
       PopupImage <- ActionSelection()$Image
       
- #Marker creation
+     #Marker creation
      leafletProxy("leafmap") %>%
-      #Clears markers and marker clusters for re render
+       #Clears markers and marker clusters for re render
         clearMarkers()%>%
         clearMarkerClusters()%>%
-       # addProviderTiles("CartoDB.VoyagerLabelsUnder")%>%
-        #Adding Markers, Clusters, and Popups 
         addMarkers(data = ActionSelection(),
-                 lng = ~LONG, lat = ~LAT,
+                lng = ~LONG, lat = ~LAT,
                 icon = mapIcon,
                 #Label
-                 label = ActionSelection()$ProjectName,
+                label = ActionSelection()$ProjectName,
                 #Marker Cluster Options
                 clusterOptions = markerClusterOptions(showCoverageOnHover = FALSE,
                                   zoomToBoundsOnClick = TRUE, 
@@ -480,7 +445,6 @@ server <- function(input, output, session) {
                             "</span>",
                         "</div>",
                     "</div>",
-                  
                    "</div>"
                 )
         )
@@ -493,10 +457,10 @@ server <- function(input, output, session) {
           leafletProxy("leafmap")%>%
           setView(lng = ZoomSelection()$Longitude, lat = ZoomSelection()$Latitude, zoom = ZoomSelection()$Zoom)
          })
-  #### END MAP #####
+
   
   
-          }
+ }
 
   
 
