@@ -126,6 +126,9 @@ body
   font-weight: bold;
 }
 
+.leaflet-control-layers-expanded{
+max-width: 120px;
+}
 /*
 #inSubActionSelector{
   display: block !important;
@@ -269,7 +272,7 @@ p {
 .compass-overlay-container{
  position: absolute; 
  right: 57px;
- bottom: 140px;
+ bottom: 171px;
  display: block !important;
 }
 .compass-overlay{

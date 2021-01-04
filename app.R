@@ -95,12 +95,15 @@ server <- function(input, output, session) {
   
   #Symbology
   Symbology_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1R5wLQGimKxDGNhMm5NSZLcHM36qFwtdiPzvNmyq2C60/edit#gid=0")
-  
+                            
   #Descriptive Text 
   Text_Input_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1zOnGKfYbfOH7C6Dp1BjkpVOd6WenxViqk490DlLbcuI/edit#gid=0")
   
   #Boat geoJSON
   STS_Boat <- rgdal::readOGR("www/STS_Boat_v6.geojson")
+  
+  #EJ Map Layer 
+  EJLayer <- rgdal::readOGR("www/EJLayer/WGS84_LISej_NYCexpansion.shp")
   
 
  
@@ -327,11 +330,13 @@ server <- function(input, output, session) {
   output$leafmap <- renderLeaflet({
      leaflet(options = leafletOptions(zoomControl = FALSE)) %>%
        addPolygons(data = STS_Boat, fill = FALSE, weight = 2, dashArray = "5", color = "grey") %>%
+       addPolygons(data = EJLayer, color = "#00aea7", weight = 1, group = "Environmental Justice Areas") %>%
        addProviderTiles("CartoDB.VoyagerLabelsUnder", group = "Streets") %>%
        addProviderTiles("Esri.WorldTopoMap", group = "Terrain")%>%
        addProviderTiles("GeoportailFrance.orthos", group = "Satellite")%>%
-       addLayersControl(baseGroups = c("Streets", "Terrain", "Satellite"),
-                        options = layersControlOptions(collapsed = FALSE,  position = 'bottomright'))%>%
+       addLayersControl(overlayGroups = c("Environmental Justice Areas"),
+                        baseGroups = c("Streets", "Terrain", "Satellite"),
+                        options = layersControlOptions(collapsed = FALSE,  position = 'bottomright')) %>%
        setView(lng = 41, lat = -72, zoom = 8)%>%
       #Adding Search service
        addSearchOSM(options = searchOptions(zoom=15, position = 'topright',
