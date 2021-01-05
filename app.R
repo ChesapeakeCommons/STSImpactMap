@@ -27,6 +27,7 @@ library(rjson)
 library(geojsonR)
 library(sp)
 library(stringr)
+library(readr)
 ###########  UI Display Script ############
 ui <- fluidPage(theme = "styler.css",
 
@@ -75,10 +76,12 @@ ui <- fluidPage(theme = "styler.css",
            #Filter output block - see output$Filters for rendering code
            div(
             class='filters',
-            uiOutput("Filters")
+            uiOutput("Filters"),
+            uiOutput("KeyBar")
            ),
       )
   )
+  
 )
 ########## Server Side Script ############
 server <- function(input, output, session) {
@@ -87,17 +90,30 @@ server <- function(input, output, session) {
   # this lets us bypass the Authorization step from gsheet4 if they are ok with just having the googlesheet be public - I can hook it up to be private though after the fact.
   gs4_deauth()
   
+  # #Raw Data
+  # Import <- read_sheet("https://docs.google.com/spreadsheets/d/1Hf6V-pWunsaA1Vt3tvvf12D0G5MwFKCe61SIr1sVAfg/edit#gid=0")
+  # print(Import)
+  # #Zoom Extent
+  # ZoomExtent_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1viLwGCnhsdhfgsgIHjYYj6INNu7YqG_h8srlQsCNf6Y/edit#gid=0")
+  # 
+  # #Symbology
+  # Symbology_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1R5wLQGimKxDGNhMm5NSZLcHM36qFwtdiPzvNmyq2C60/edit#gid=0")
+  # 
+  # #Descriptive Text
+  # Text_Input_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1zOnGKfYbfOH7C6Dp1BjkpVOd6WenxViqk490DlLbcuI/edit#gid=0")
+  
   #Raw Data
-  Import <- read_sheet("https://docs.google.com/spreadsheets/d/1Hf6V-pWunsaA1Vt3tvvf12D0G5MwFKCe61SIr1sVAfg/edit#gid=0")
-  
+  Import <- read_csv("www/TestData/Input.csv")
+
   #Zoom Extent
-  ZoomExtent_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1viLwGCnhsdhfgsgIHjYYj6INNu7YqG_h8srlQsCNf6Y/edit#gid=0")
-  
+  ZoomExtent_V1 <- read_csv("www/TestData/Zoom.csv")
+
   #Symbology
-  Symbology_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1R5wLQGimKxDGNhMm5NSZLcHM36qFwtdiPzvNmyq2C60/edit#gid=0")
-                            
-  #Descriptive Text 
-  Text_Input_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1zOnGKfYbfOH7C6Dp1BjkpVOd6WenxViqk490DlLbcuI/edit#gid=0")
+  Symbology_V1 <- read_csv("www/TestData/Symbology.csv")
+
+  #Descriptive Text
+  Text_Input_V1 <- read_csv("www/TestData/Text.csv")
+
   
   #Boat geoJSON
   STS_Boat <- rgdal::readOGR("www/STS_Boat_v6.geojson")
@@ -157,15 +173,18 @@ server <- function(input, output, session) {
     }
   }
 
-
    #Converting all characters to factors, and setting NAs to blank
    MapData <- MapData %>%
    mutate_if(is.character, as.factor)
   
    MapData[is.na(MapData)] = ""
    MapData[is.null(MapData)] = ""
-  
-  
+   
+   MapDataFinal <- MapData
+   print(nrow(MapData))
+   ## END DATA SETUP 
+   
+   
   #Dynamic Text Paragraph
   output$DescriptionParagraph <- renderText({
     Text_Input_V1$DescriptionParagraph
@@ -190,17 +209,13 @@ server <- function(input, output, session) {
     req(MapData)
     req(ZoomExtent_V1)
     tagList(
-      #Action Selection
-      selectizeInput("inActionSelector", "Search by Action:",
-                     choices = MapData$Action, multiple = TRUE, options = list(placeholder = 'All Actions')),
-      
       #Sub Action Selection
       selectizeInput("inSubActionSelector", "Search by Sub Action:",
                      choices = MapData$SubAction, multiple = TRUE, options = list(placeholder = 'All Sub Actions')),
       
       # Year
       selectizeInput("inYearSelector", "Search by Year:",
-                     choices = MapData$Year, multiple = TRUE, selected = 2020),
+                     choices = MapData$Year, multiple = TRUE),
       
       # Zoom
       selectizeInput("inZoomSelector", "Zoom to:",
@@ -208,96 +223,185 @@ server <- function(input, output, session) {
     )
   })
   
-  #### FILTER INPUT DATA HANDLING ###
-  # Reactive element that gets the correct Layer Selection and returns "ActionSelection()" for use in mapping from Action Selector
-  ActionSelection <- reactive ({
-    
-    #Converts the input datatype into list --- I think...
-    x <- as.character(input$inActionSelector)
-    y <- as.character(input$inSubActionSelector)
-    z <- as.character(input$inYearSelector)
-    
-    ## Filtering for Action and Sub Actions
-    #Sets dataframe to all Actions and All years if no selection is chosen
-    if (length(x) == 0 && length(y) == 0 && length(z) == 0)
-    {
-      Layers <- MapData
-      updateSelectizeInput(session, "inActionSelector",
-                           choices = sort(Layers$Action))
-      updateSelectizeInput(session, "inSubActionSelector",
-                           choices = sort(Layers$SubAction))
-      updateSelectizeInput(session, "inYearSelector",
-                           choices = sort(Layers$Year, decreasing = TRUE))
-      return(Layers)
-    }
-    #Updates Subaction and Year selection when only Action is chosen
-    if (length(x) > 0 && length(y) == 0 && length(z) == 0 )
-    {
-      Layers <- filter(MapData, Action %in% x)  
-      updateSelectizeInput(session, "inSubActionSelector",
-                           choices = sort(Layers$SubAction))
-      updateSelectizeInput(session, "inYearSelector",
-                           choices = sort(Layers$Year, decreasing = TRUE))
-      return(Layers)
-    }
-    # Updates Year when Action and SubAction are selected
-    if (length(x) > 0 && length(y) > 0 && length(z) == 0)
-    {
-      Layers <- filter(MapData, Action %in% x)
-      Layers <- filter(Layers, SubAction %in% y)
-      updateSelectizeInput(session, "inYearSelector",
-                           choices = sort(Layers$Year, decreasing = TRUE))
-      return(Layers)
-    }
-    # Updates Action and Year when SubAction is Selected
-   if (length(x) == 0 && length(y) > 0 && length(z) == 0)
-    {
-     Layers <- filter(MapData, SubAction %in% y) 
-     updateSelectizeInput(session, "inActionSelector",
-                          choices = sort(Layers$Action))
-     updateSelectizeInput(session, "inYearSelector",
-                          choices = sort(Layers$Year, decreasing = TRUE))
-     return(Layers)
-    }
-    #Updates Action when SubAction and Year are selected
-    if (length(x) == 0 && length(y) > 0 && length(z) > 0)
-    {
-      Layers <- filter(MapData, SubAction %in% y)
-      Layers <- filter(Layers, Year %in% z)
-      updateSelectizeInput(session, "inActionSelector",
-                           choices = sort(Layers$Action))
-      return(Layers)
-    }
-    #Updates Action and Subaction when Year is selected
-    if (length(x) == 0 && length(y) == 0 && length(z) > 0)
-    {
-      Layers <- filter(MapData, Year %in% z)
-      updateSelectizeInput(session, "inActionSelector",
-                           choices = sort(Layers$Action))
-      updateSelectizeInput(session, "inSubActionSelector",
-                           choices = sort(Layers$SubAction))
-      return(Layers)
-    }
-    #Updates Subaction when Action and Year are selected
-    if (length(x) > 0 && length(y) == 0 && length(z) > 0)
-    {
-      Layers <- filter(MapData, Action %in% x)
-      Layers <- filter(Layers, Year %in% z)
-
-      updateSelectizeInput(session, "inSubActionSelector",
-                           choices = sort(Layers$SubAction))
-      return(Layers)
-    }
-    #No update, just filters when all are selected 
-    if (length(x) > 0 && length(y) > 0 && length(z) > 0)
-    {
-      Layers <- filter(MapData, Action %in% x)
-      Layers <- filter(Layers, SubAction %in% y)
-      Layers <- filter(Layers, Year %in% z)
-      return(Layers)
-    }
+  output$KeyBar <- renderUI({
+    tagList(
+      actionButton("ResetAll", label = "Reset All"),
+      actionButton("Climate", label = "Climate", style = "width: 50px; height: 50px;
+    background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Climate_and_Resiliency.png');  background-size: cover; background-position: center;"),
+      actionButton("Cleanups", label = "Cleanups", style = "width: 50px; height: 50px;
+    background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Cleanups.png');  background-size: cover; background-position: center;"),
+      actionButton("Eco", label = "Eco", style = "width: 50px; height: 50px;
+    background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Ecological_Restoration.png');  background-size: cover; background-position: center;"),
+      actionButton("Justice", label = "Justice", style = "width: 50px; height: 50px;
+    background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Environmental_Justice.png');  background-size: cover; background-position: center;"),
+      actionButton("Healthy", label = "Healthy", style = "width: 50px; height: 50px;
+    background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Healthy_Water.png');  background-size: cover; background-position: center;"),
+      actionButton("Lands", label = "Lands", style = "width: 50px; height: 50px;
+    background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Protected_Lands.png');  background-size: cover; background-position: center;"),
+      actionButton("Monitoring", label = "Monitoring", style = "width: 50px; height: 50px;
+    background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Water_Monitoring.png');  background-size: cover; background-position: center;"),
+    )
   })
-  ###### END ACTION INPUT HANDLING 
+  
+  # #### FILTER INPUT DATA HANDLING ###
+  MapDataReactive <- reactiveValues(df = data.frame())
+  MapDataReactive$df <- as.data.frame(MapDataFinal)
+  
+  print(nrow(isolate(MapDataReactive$df)))
+  print(nrow(MapDataFinal))
+  
+  #Reset
+  observeEvent(input$ResetAll, {
+    MapDataReactive$df <- as.data.frame(MapDataFinal)
+    updateSelectizeInput(session, "inYearSelector",
+                         choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
+    updateSelectizeInput(session, "inSubActionSelector",
+                         choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
+  })
+  
+  #Cleanups
+  observeEvent(input$Cleanups, {
+    if(nrow(MapDataReactive$df) == nrow(MapDataFinal))
+    {
+      MapDataReactive$df <- filter(MapDataFinal, Action == "Cleanups")
+    }
+    else
+    {
+      MapDataReactive$df <- unique(rbind(MapDataReactive$df, filter(MapDataFinal, Action == "Cleanups")))
+    }
+    
+    updateSelectizeInput(session, "inYearSelector",
+                         choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
+    updateSelectizeInput(session, "inSubActionSelector",
+                         choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
+    
+  })
+  
+  #Climate
+  observeEvent(input$Climate, {
+    print(nrow(MapDataReactive$df))
+    print(nrow(MapDataFinal))
+    if(nrow(MapDataReactive$df) == nrow(MapDataFinal))
+    {
+      MapDataReactive$df <- filter(MapDataFinal, Action == "Climate & Resiliency")
+    }
+    else
+    {
+      MapDataReactive$df <- unique(rbind(MapDataReactive$df, filter(MapDataFinal, Action == "Climate & Resiliency")))
+    }
+    
+    updateSelectizeInput(session, "inYearSelector",
+                         choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
+    updateSelectizeInput(session, "inSubActionSelector",
+                         choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
+  })
+  
+  #Eco
+  observeEvent(input$Eco, {
+    if(nrow(MapDataReactive$df) == nrow(MapDataFinal))
+    {
+      MapDataReactive$df <- filter(MapDataFinal, Action == "Ecological Restoration")
+    }
+    else
+    {
+      MapDataReactive$df <- unique(rbind(MapDataReactive$df, filter(MapDataFinal, Action == "Ecological Restoration")))
+    }
+    
+    updateSelectizeInput(session, "inYearSelector",
+                         choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
+    updateSelectizeInput(session, "inSubActionSelector",
+                         choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
+  })
+  
+  #Justice
+  observeEvent(input$Justice, {
+    if(nrow(MapDataReactive$df) == nrow(MapDataFinal))
+    {
+      MapDataReactive$df <- filter(MapDataFinal, Action == "Environmental Justice")
+    }
+    else
+    {
+      MapDataReactive$df <- unique(rbind(MapDataReactive$df, filter(MapDataFinal, Action == "Environmental Justice")))
+    }
+    
+    updateSelectizeInput(session, "inYearSelector",
+                         choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
+    updateSelectizeInput(session, "inSubActionSelector",
+                         choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
+  })
+  
+  #Healthy Waters
+  observeEvent(input$Healthy, {
+    if(nrow(MapDataReactive$df) == nrow(MapDataFinal))
+    {
+      MapDataReactive$df <- filter(MapDataFinal, Action == "Healthy Waters")
+    }
+    else
+    {
+      MapDataReactive$df <- unique(rbind(MapDataReactive$df, filter(MapDataFinal, Action == "Healthy Waters")))
+    }
+    
+    updateSelectizeInput(session, "inYearSelector",
+                         choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
+    updateSelectizeInput(session, "inSubActionSelector",
+                         choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
+  })
+  
+  #Lands
+  observeEvent(input$Lands, {
+    if(nrow(MapDataReactive$df) == nrow(MapDataFinal))
+    {
+      MapDataReactive$df <- filter(MapDataFinal, Action == "Protected Lands")
+    }
+    else
+    {
+      MapDataReactive$df <- unique(rbind(MapDataReactive$df, filter(MapDataFinal, Action == "Protected Lands")))
+    }
+    
+    updateSelectizeInput(session, "inYearSelector",
+                         choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
+    updateSelectizeInput(session, "inSubActionSelector",
+                         choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
+  })
+  
+  #Monitoring
+  observeEvent(input$Monitoring, {
+    if(nrow(MapDataReactive$df) == nrow(MapDataFinal))
+    {
+      MapDataReactive$df <- filter(MapDataFinal, Action == "Water Monitoring")
+    }
+    else
+    {
+      MapDataReactive$df <- unique(rbind(MapDataReactive$df, filter(MapDataFinal, Action == "Water Monitoring")))
+    }
+    
+    updateSelectizeInput(session, "inYearSelector",
+                         choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
+    updateSelectizeInput(session, "inSubActionSelector",
+                         choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
+  })
+  
+  #SubAction
+  #Year
+  observeEvent(input$inSubActionSelector, {
+    MapDataReactive$df <- filter(MapDataReactive$df, SubAction %in% input$inSubActionSelector)
+    updateSelectizeInput(session, "inSubActionSelector",
+                         choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
+    updateSelectizeInput(session, "inYearSelector",
+                         choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
+  })
+  
+  #Year
+  observeEvent(input$inYearSelector, {
+    print("Test")
+    MapDataReactive$df <- filter(MapDataReactive$df, Year %in% input$inYearSelector)
+    updateSelectizeInput(session, "inYearSelector",
+                         choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
+    updateSelectizeInput(session, "inSubActionSelector",
+                         choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
+  })
+  
+  ###### END FILTER INPUT HANDLING 
   
   
   ##### ZOOM EXTENT HANDLING ####
@@ -348,38 +452,40 @@ server <- function(input, output, session) {
   })
   
 #This updates the map based on the changes in the selected data such that the map doesn't need to redraw every time
-  observeEvent(ActionSelection(),
+  observeEvent(MapDataReactive$df,
     {
+  #  print(MapDataReactive())
+    Layers <- MapDataReactive$df
     #Creating Map Markers with URL (Will likely store this information in an Action only sheet and then join to layers in program after data importing)
-    url <- as.character(ActionSelection()$Marker)
-    w <- str_remove_all(ActionSelection()$Width, "[px]")
-    h <- str_remove_all(ActionSelection()$Height, "[px]")
+    url <- as.character(Layers$Marker)
+    w <- str_remove_all(Layers$Width, "[px]")
+    h <- str_remove_all(Layers$Height, "[px]")
     
     mapIcon <- makeIcon(
       iconUrl = url,
       iconWidth = w, iconHeight = h)
 
       # Creating Popup Image
-      PopupImage <- ActionSelection()$Image
+      PopupImage <- Layers$Image
       
      #Marker creation
      leafletProxy("leafmap") %>%
        #Clears markers and marker clusters for re render
         clearMarkers()%>%
         clearMarkerClusters()%>%
-        addMarkers(data = ActionSelection(),
+        addMarkers(data = Layers,
                 lng = ~LONG, lat = ~LAT,
                 icon = mapIcon,
                 #Label
-                label = ActionSelection()$ProjectName,
+                label = Layers$ProjectName,
                 #Marker Cluster Options
                 clusterOptions = markerClusterOptions(showCoverageOnHover = FALSE,
                                   zoomToBoundsOnClick = TRUE, 
-                                  spiderfyOnMaxZoom = 2,
+                                  spiderfyOnMaxZoom = 5,
                                   removeOutsideVisibleBounds = TRUE,
                                   spiderLegPolylineOptions = list(weight = 2, color = "#222", opacity = 0.5), 
-                                  freezeAtZoom = 10,
-                                  maxClusterRadius = .05,
+                                  freezeAtZoom = 15,
+                                  maxClusterRadius = 1,
                                   weight=3,
                                   color="#33CC33", opacity=1, fillColor="#FF9900", 
                                   fillOpacity=0.8) ,
@@ -387,65 +493,65 @@ server <- function(input, output, session) {
                 popup = paste(
                   "<div class='popup-wrapper'>",
                     "<div class='popup-image' style='border: 0px solid red;",
-                    "background-image: url(\"",ActionSelection()$Image,"\")'>",
-                    # "<img class='pu-img' src='", ActionSelection()$Image ,"'>",
+                    "background-image: url(\"",Layers$Image,"\")'>",
+                    # "<img class='pu-img' src='", Layers$Image ,"'>",
                     "</div>",
                     "<div class='popup-text'>",
                       "<div class='popup-title'>",
                       "<div class='popup-title-marker",
-                        (ifelse(ActionSelection()$Override == TRUE,
+                        (ifelse(Layers$Override == TRUE,
                                 paste("marker-resize-01"),
                                 paste("marker-resize-02")
                           )) ,
-                              "' style='margin-right:6px;", ActionSelection()$Height,"; width:",ActionSelection()$Width,"; background-image:url(\"",ActionSelection()$Marker,"\");'>",
+                              "' style='margin-right:6px;", Layers$Height,"; width:",Layers$Width,"; background-image:url(\"",Layers$Marker,"\");'>",
                         "</div>",
                           "<div class='popup-title-text'>",
-                            "<span class='popup-title-h1' style=''>", ActionSelection()$Action, "</span>",
-                            "<span class='popup-title-h2' style='color:",ActionSelection()$Color,";'>", ActionSelection()$SubAction,"</span>",
+                            "<span class='popup-title-h1' style=''>", Layers$Action, "</span>",
+                            "<span class='popup-title-h2' style='color:",Layers$Color,";'>", Layers$SubAction,"</span>",
                           "</div>",
                         "</div>",
                         "<div class='popup-body'>",
-                          "<span class='popup-title-h2 pu-h2-adj'><b>Project:</b>", ActionSelection()$ProjectName,"</span>",
+                          "<span class='popup-title-h2 pu-h2-adj'><b>Project:</b>", Layers$ProjectName,"</span>",
                           "<span class='popup-line adj'>",
-                            "<b>Status:</b> ",  ActionSelection()$Status,"",  
-                            "<b style='margin-left:10px;'>Started:</b> ", ActionSelection()$Year, "",
-                            "<b class='no-left-margin' style='margin-left:10px;'>Completed:</b> ", ActionSelection()$YearComplete, "<br>",
+                            "<b>Status:</b> ",  Layers$Status,"",  
+                            "<b style='margin-left:10px;'>Started:</b> ", Layers$Year, "",
+                            "<b class='no-left-margin' style='margin-left:10px;'>Completed:</b> ", Layers$YearComplete, "<br>",
                            "</span>",
                            "<span class='popup-line popup-line-description",
-                                  (ifelse((ActionSelection()$ShortDescription == 'NULL')|(is.na(ActionSelection()$ShortDescription)),
+                                  (ifelse((Layers$ShortDescription == 'NULL')|(is.na(Layers$ShortDescription)),
                                             paste("hide"),
                                             paste("")
                                     )) , 
-                              "'><b>Description:</b>",ActionSelection()$ShortDescription,
+                              "'><b>Description:</b>",Layers$ShortDescription,
                             "</span>",
                             "<span class='popup-line", 
-                                  (ifelse(ActionSelection()$Value1 == 'NULL' |(is.na(ActionSelection()$Value1)),
+                                  (ifelse(Layers$Value1 == 'NULL' |(is.na(Layers$Value1)),
                                                                paste("hide"),
                                                                paste("")
                                    )) , 
-                                "'><b>",ActionSelection()$KeyMetric1,":</b> ",ActionSelection()$Value1,"</span>",
+                                "'><b>",Layers$KeyMetric1,":</b> ",Layers$Value1,"</span>",
                             "<span class='popup-line popup-line-adj",
-                                   (ifelse(ActionSelection()$Value2 == 'NULL' |(is.na(ActionSelection()$Value2)),
+                                   (ifelse(Layers$Value2 == 'NULL' |(is.na(Layers$Value2)),
                                        paste("hide"),
                                        paste("")
                                 )) , 
-                              "'><b>",ActionSelection()$KeyMetric2,":</b> ",ActionSelection()$Value2,"</span>",
+                              "'><b>",Layers$KeyMetric2,":</b> ",Layers$Value2,"</span>",
                             "<span class='popup-line",
-                                  (ifelse((ActionSelection()$Url == '')|(is.na(ActionSelection()$Url)),
+                                  (ifelse((Layers$Url == '')|(is.na(Layers$Url)),
                                           paste("hide"),
                                           paste("")
                                   )) , 
                             "'>", 
-                                "<b>More Info:</b><a href='",ActionSelection()$Url,"'>",ActionSelection()$Url,"</a>",
+                                "<b>More Info:</b><a href='",Layers$Url,"'>",Layers$Url,"</a>",
                             "</span>",
                             "<span class='popup-line' style='text-overflow: ellipsis'>", 
                               "<span class='popup-line",
-                                   (ifelse(ActionSelection()$LocationName == 'NULL'|(is.na(ActionSelection()$LocationName)),
+                                   (ifelse(Layers$LocationName == 'NULL'|(is.na(Layers$LocationName)),
                                           paste("hide"),
                                           paste("")
                                   )) , 
-                              "'><b>Location:</b>",ActionSelection()$LocationName,"</span>",
-                              "<span class='popup-line popup-line-adj'><b>Lat:</b>",ActionSelection()$LAT,"&nbsp; <b>Long:</b>",ActionSelection()$LONG,"</span>",
+                              "'><b>Location:</b>",Layers$LocationName,"</span>",
+                              "<span class='popup-line popup-line-adj'><b>Lat:</b>",Layers$LAT,"&nbsp; <b>Long:</b>",Layers$LONG,"</span>",
                                
                             "</span>",
                         "</div>",
