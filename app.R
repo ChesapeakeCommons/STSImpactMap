@@ -90,29 +90,31 @@ server <- function(input, output, session) {
   # this lets us bypass the Authorization step from gsheet4 if they are ok with just having the googlesheet be public - I can hook it up to be private though after the fact.
   gs4_deauth()
   
-  # #Raw Data
-  # Import <- read_sheet("https://docs.google.com/spreadsheets/d/1Hf6V-pWunsaA1Vt3tvvf12D0G5MwFKCe61SIr1sVAfg/edit#gid=0")
-  # print(Import)
-  # #Zoom Extent
-  # ZoomExtent_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1viLwGCnhsdhfgsgIHjYYj6INNu7YqG_h8srlQsCNf6Y/edit#gid=0")
-  # 
-  # #Symbology
-  # Symbology_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1R5wLQGimKxDGNhMm5NSZLcHM36qFwtdiPzvNmyq2C60/edit#gid=0")
-  # 
-  # #Descriptive Text
-  # Text_Input_V1 <- read_sheet("https://docs.google.com/spreadsheets/d/1zOnGKfYbfOH7C6Dp1BjkpVOd6WenxViqk490DlLbcuI/edit#gid=0")
-  
+  #Function which trys the Gsheets read_sheet and if Resource Exhause Limit is reached, uses a saved CSV.
+  readsheet <- function(x, y)
+  {
+    tryCatch(
+      expr = {
+        read_sheet(x)
+      },
+      error = function(e)
+      {
+        df <- read_csv(y)
+      }
+    )
+  }
+
   #Raw Data
-  Import <- read_csv("www/TestData/Input.csv")
+  Import <- readsheet("https://docs.google.com/spreadsheets/d/1Hf6V-pWunsaA1Vt3tvvf12D0G5MwFKCe61SIr1sVAfg/edit#gid=0", "www/TestData/Input.csv")
 
   #Zoom Extent
-  ZoomExtent_V1 <- read_csv("www/TestData/Zoom.csv")
+  ZoomExtent_V1 <- readsheet("https://docs.google.com/spreadsheets/d/1viLwGCnhsdhfgsgIHjYYj6INNu7YqG_h8srlQsCNf6Y/edit#gid=0", "www/TestData/Zoom.csv")
 
   #Symbology
-  Symbology_V1 <- read_csv("www/TestData/Symbology.csv")
+  Symbology_V1 <- readsheet("https://docs.google.com/spreadsheets/d/1R5wLQGimKxDGNhMm5NSZLcHM36qFwtdiPzvNmyq2C60/edit#gid=0", "www/TestData/Symbology.csv")
 
   #Descriptive Text
-  Text_Input_V1 <- read_csv("www/TestData/Text.csv")
+  Text_Input_V1 <- readsheet("https://docs.google.com/spreadsheets/d/1zOnGKfYbfOH7C6Dp1BjkpVOd6WenxViqk490DlLbcuI/edit#gid=0", "www/TestData/Text.csv")
 
   
   #Boat geoJSON
@@ -250,6 +252,22 @@ server <- function(input, output, session) {
   print(nrow(isolate(MapDataReactive$df)))
   print(nrow(MapDataFinal))
   
+  buttonUpdate <- function(y)
+  {
+      if(nrow(MapDataReactive$df) == nrow(MapDataFinal))
+      {
+        MapDataReactive$df <- filter(MapDataFinal, Action == y)
+      }
+      else
+      {
+        MapDataReactive$df <- unique(rbind(MapDataReactive$df, filter(MapDataFinal, Action == y)))
+      }
+      updateSelectizeInput(session, "inYearSelector",
+                           choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
+      updateSelectizeInput(session, "inSubActionSelector",
+                           choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
+  }
+  
   #Reset
   observeEvent(input$ResetAll, {
     MapDataReactive$df <- as.data.frame(MapDataFinal)
@@ -259,138 +277,36 @@ server <- function(input, output, session) {
                          choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
   })
   
-  #Cleanups
-  observeEvent(input$Cleanups, {
-    if(nrow(MapDataReactive$df) == nrow(MapDataFinal))
-    {
-      MapDataReactive$df <- filter(MapDataFinal, Action == "Cleanups")
-    }
-    else
-    {
-      MapDataReactive$df <- unique(rbind(MapDataReactive$df, filter(MapDataFinal, Action == "Cleanups")))
-    }
-    
-    updateSelectizeInput(session, "inYearSelector",
-                         choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
-    updateSelectizeInput(session, "inSubActionSelector",
-                         choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
-    
-  })
+  #MapDataUpdate Function Wrapped in an observe Event, ooooh its so much cleaner than before!
+  observeEvent(input$Cleanups,{buttonUpdate("Cleanups")})
+  observeEvent(input$Climate,{buttonUpdate("Climate & Resiliency")})
+  observeEvent(input$Eco,{buttonUpdate("Ecological Restoration")})
+  observeEvent(input$Justice,{buttonUpdate("Environmental Justice")})
+  observeEvent(input$Healthy,{buttonUpdate("Healthy Waters")})
+  observeEvent(input$Lands,{buttonUpdate("Protected Lands")})
+  observeEvent(input$Monitoring,{buttonUpdate("Water Monitoring")})
   
-  #Climate
-  observeEvent(input$Climate, {
-    print(nrow(MapDataReactive$df))
-    print(nrow(MapDataFinal))
-    if(nrow(MapDataReactive$df) == nrow(MapDataFinal))
-    {
-      MapDataReactive$df <- filter(MapDataFinal, Action == "Climate & Resiliency")
-    }
-    else
-    {
-      MapDataReactive$df <- unique(rbind(MapDataReactive$df, filter(MapDataFinal, Action == "Climate & Resiliency")))
-    }
-    
-    updateSelectizeInput(session, "inYearSelector",
-                         choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
-    updateSelectizeInput(session, "inSubActionSelector",
-                         choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
-  })
-  
-  #Eco
-  observeEvent(input$Eco, {
-    if(nrow(MapDataReactive$df) == nrow(MapDataFinal))
-    {
-      MapDataReactive$df <- filter(MapDataFinal, Action == "Ecological Restoration")
-    }
-    else
-    {
-      MapDataReactive$df <- unique(rbind(MapDataReactive$df, filter(MapDataFinal, Action == "Ecological Restoration")))
-    }
-    
-    updateSelectizeInput(session, "inYearSelector",
-                         choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
-    updateSelectizeInput(session, "inSubActionSelector",
-                         choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
-  })
-  
-  #Justice
-  observeEvent(input$Justice, {
-    if(nrow(MapDataReactive$df) == nrow(MapDataFinal))
-    {
-      MapDataReactive$df <- filter(MapDataFinal, Action == "Environmental Justice")
-    }
-    else
-    {
-      MapDataReactive$df <- unique(rbind(MapDataReactive$df, filter(MapDataFinal, Action == "Environmental Justice")))
-    }
-    
-    updateSelectizeInput(session, "inYearSelector",
-                         choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
-    updateSelectizeInput(session, "inSubActionSelector",
-                         choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
-  })
-  
-  #Healthy Waters
-  observeEvent(input$Healthy, {
-    if(nrow(MapDataReactive$df) == nrow(MapDataFinal))
-    {
-      MapDataReactive$df <- filter(MapDataFinal, Action == "Healthy Waters")
-    }
-    else
-    {
-      MapDataReactive$df <- unique(rbind(MapDataReactive$df, filter(MapDataFinal, Action == "Healthy Waters")))
-    }
-    
-    updateSelectizeInput(session, "inYearSelector",
-                         choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
-    updateSelectizeInput(session, "inSubActionSelector",
-                         choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
-  })
-  
-  #Lands
-  observeEvent(input$Lands, {
-    if(nrow(MapDataReactive$df) == nrow(MapDataFinal))
-    {
-      MapDataReactive$df <- filter(MapDataFinal, Action == "Protected Lands")
-    }
-    else
-    {
-      MapDataReactive$df <- unique(rbind(MapDataReactive$df, filter(MapDataFinal, Action == "Protected Lands")))
-    }
-    
-    updateSelectizeInput(session, "inYearSelector",
-                         choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
-    updateSelectizeInput(session, "inSubActionSelector",
-                         choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
-  })
-  
-  #Monitoring
-  observeEvent(input$Monitoring, {
-    if(nrow(MapDataReactive$df) == nrow(MapDataFinal))
-    {
-      MapDataReactive$df <- filter(MapDataFinal, Action == "Water Monitoring")
-    }
-    else
-    {
-      MapDataReactive$df <- unique(rbind(MapDataReactive$df, filter(MapDataFinal, Action == "Water Monitoring")))
-    }
-    
-    updateSelectizeInput(session, "inYearSelector",
-                         choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
-    updateSelectizeInput(session, "inSubActionSelector",
-                         choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
-  })
-  
-  #SubAction
-  #Year
-  observeEvent(input$inSubActionSelector, {
-    MapDataReactive$df <- filter(MapDataReactive$df, SubAction %in% input$inSubActionSelector)
+  filterUpdate <- function(x,y)
+  {
+    MapDataReactive$df <- filter(MapDataReactive$df, MapDataReactive$df[x] %in% y)
     updateSelectizeInput(session, "inSubActionSelector",
                          choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
     updateSelectizeInput(session, "inYearSelector",
-                         choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
-  })
+                         choices = sort(MapDataReactive$df$Year, decreasing = TRUE))  
+  }
   
+  observeEvent(input$inSubActionSelector, {filterUpdate("SubAction",'input$inSubActionSelector')})
+  
+  # 
+  # #SubAction
+  # observeEvent(input$inSubActionSelector, {
+  #   MapDataReactive$df <- filter(MapDataReactive$df, SubAction %in% input$inSubActionSelector)
+  #   updateSelectizeInput(session, "inSubActionSelector",
+  #                        choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
+  #   updateSelectizeInput(session, "inYearSelector",
+  #                        choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
+  # })
+  # 
   #Year
   observeEvent(input$inYearSelector, {
     print("Test")
@@ -421,9 +337,7 @@ server <- function(input, output, session) {
       }
     return(ZoomChoice)
   })
-  
 
-  
         #### END FILTERS ####
   ## ****************************## 
       #### MAP RENDERING  #### 
