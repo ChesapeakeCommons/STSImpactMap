@@ -28,6 +28,8 @@ library(geojsonR)
 library(sp)
 library(stringr)
 library(readr)
+library(tidyr)
+library(splitstackshape)
 ###########  UI Display Script ############
 ui <- fluidPage(theme = "styler.css",
 
@@ -105,7 +107,7 @@ server <- function(input, output, session) {
   }
 
   #Raw Data
-  Import <- readsheet("https://docs.google.com/spreadsheets/d/1Hf6V-pWunsaA1Vt3tvvf12D0G5MwFKCe61SIr1sVAfg/edit#gid=0", "www/TestData/Input.csv")
+  Import <- readsheet("https://docs.google.com/spreadsheets/d/10VMsQ57EL25gDjb7bAEjOZDI2mEWiOkIoHwHWNW0MOE/edit#gid=0", "www/TestData/Input.csv")
 
   #Zoom Extent
   ZoomExtent_V1 <- readsheet("https://docs.google.com/spreadsheets/d/1viLwGCnhsdhfgsgIHjYYj6INNu7YqG_h8srlQsCNf6Y/edit#gid=0", "www/TestData/Zoom.csv")
@@ -157,7 +159,7 @@ server <- function(input, output, session) {
   
   
   #Loops throug and adds additional layers
-  MapData <- Import[rep(row.names(Import), Import$Span), 1:22]
+  MapData <- Import[rep(row.names(Import), Import$Span), 1:ncol(Import)]
               
   #Changes the start year 
   MapData$Count <- ave(MapData$Year, MapData$ProjectName, FUN = seq_along)
@@ -182,8 +184,16 @@ server <- function(input, output, session) {
    MapData[is.na(MapData)] = ""
    MapData[is.null(MapData)] = ""
    
-   MapDataFinal <- MapData
-   print(nrow(MapData))
+   #Pulls out list of Tags from MapDataFinal static frame 
+   TagsList <- data.frame(MapData$Tags, stringsAsFactors = FALSE) %>%
+     separate_rows(MapData.Tags, sep = ",") %>%
+     unique()
+   
+   #Splits texts to columns for the Tags and creating MapDataFinal 
+   MapDataFinal <- cSplit(MapData, "Tags", ",")
+     
+  # print(MapDataFinal)
+   
    ## END DATA SETUP 
    
    
@@ -202,6 +212,12 @@ server <- function(input, output, session) {
     Text_Input_V1$DescriptionSentence
   })
   
+  
+  
+
+
+
+  
  #### END IMPORT DATA MOTIFICATIONS ####
     ## ****************************## 
           #### FILTERS #### 
@@ -211,6 +227,9 @@ server <- function(input, output, session) {
     req(MapData)
     req(ZoomExtent_V1)
     tagList(
+      #Tag Word Search 
+      selectizeInput("inTagsSearch" , "Search:", choices = TagsList$MapData.Tags, multiple = TRUE),
+      
       #Sub Action Selection
       selectizeInput("inSubActionSelector", "Search by Sub Action:",
                      choices = MapData$SubAction, multiple = TRUE, options = list(placeholder = 'All Sub Actions')),
@@ -228,19 +247,19 @@ server <- function(input, output, session) {
   output$KeyBar <- renderUI({
     tagList(
       actionButton("ResetAll", label = "Reset All"),
-      actionButton("Climate", label = "Climate", style = "width: 50px; height: 50px;
+      actionButton("Climate", label = "", style = "width: 50px; height: 50px;
     background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Climate_and_Resiliency.png');  background-size: cover; background-position: center;"),
-      actionButton("Cleanups", label = "Cleanups", style = "width: 50px; height: 50px;
+      actionButton("Cleanups", label = "", style = "width: 50px; height: 50px;
     background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Cleanups.png');  background-size: cover; background-position: center;"),
-      actionButton("Eco", label = "Eco", style = "width: 50px; height: 50px;
+      actionButton("Eco", label = "", style = "width: 50px; height: 50px;
     background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Ecological_Restoration.png');  background-size: cover; background-position: center;"),
-      actionButton("Justice", label = "Justice", style = "width: 50px; height: 50px;
+      actionButton("Justice", label = "", style = "width: 50px; height: 50px;
     background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Environmental_Justice.png');  background-size: cover; background-position: center;"),
-      actionButton("Healthy", label = "Healthy", style = "width: 50px; height: 50px;
+      actionButton("Healthy", label = "", style = "width: 50px; height: 50px;
     background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Healthy_Water.png');  background-size: cover; background-position: center;"),
-      actionButton("Lands", label = "Lands", style = "width: 50px; height: 50px;
+      actionButton("Lands", label = "", style = "width: 50px; height: 50px;
     background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Protected_Lands.png');  background-size: cover; background-position: center;"),
-      actionButton("Monitoring", label = "Monitoring", style = "width: 50px; height: 50px;
+      actionButton("Monitoring", label = "", style = "width: 50px; height: 50px;
     background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Water_Monitoring.png');  background-size: cover; background-position: center;"),
     )
   })
@@ -254,10 +273,16 @@ server <- function(input, output, session) {
   
   buttonUpdate <- function(y)
   {
+    print(MapDataReactive$df$Action)
       if(nrow(MapDataReactive$df) == nrow(MapDataFinal))
       {
         MapDataReactive$df <- filter(MapDataFinal, Action == y)
       }
+    #Section if they want it to be subtractive instead of additive 
+      # else if(MapDataReactive$df$Action %in% y)
+      # {
+      #   MapDataReactive$df <- subset(MapDataReactive$df, Action == y)
+      # }
       else
       {
         MapDataReactive$df <- unique(rbind(MapDataReactive$df, filter(MapDataFinal, Action == y)))
@@ -286,31 +311,42 @@ server <- function(input, output, session) {
   observeEvent(input$Lands,{buttonUpdate("Protected Lands")})
   observeEvent(input$Monitoring,{buttonUpdate("Water Monitoring")})
   
-  filterUpdate <- function(x,y)
-  {
-    MapDataReactive$df <- filter(MapDataReactive$df, MapDataReactive$df[x] %in% y)
-    updateSelectizeInput(session, "inSubActionSelector",
-                         choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
-    updateSelectizeInput(session, "inYearSelector",
-                         choices = sort(MapDataReactive$df$Year, decreasing = TRUE))  
-  }
-  
-  observeEvent(input$inSubActionSelector, {filterUpdate("SubAction",'input$inSubActionSelector')})
-  
-  # 
-  # #SubAction
-  # observeEvent(input$inSubActionSelector, {
-  #   MapDataReactive$df <- filter(MapDataReactive$df, SubAction %in% input$inSubActionSelector)
+  #### TESTING NEW FUNCTION #### 
+  # filterUpdate <- function(x,y)
+  # {
+  #   MapDataReactive$df <- filter(MapDataReactive$df, MapDataReactive$df[x] %in% y)
   #   updateSelectizeInput(session, "inSubActionSelector",
   #                        choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
   #   updateSelectizeInput(session, "inYearSelector",
-  #                        choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
-  # })
-  # 
+  #                        choices = sort(MapDataReactive$df$Year, decreasing = TRUE))  
+  # }
+  # observeEvent(input$inSubActionSelector, {filterUpdate("SubAction",'input$inSubActionSelector')})
+  
+
+  #SubAction
+  observeEvent(input$inSubActionSelector, {
+    MapDataReactive$df <- filter(MapDataReactive$df, SubAction %in% input$inSubActionSelector)
+    updateSelectizeInput(session, "inSubActionSelector",
+                         choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
+    updateSelectizeInput(session, "inYearSelector",
+                         choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
+  })
+
   #Year
   observeEvent(input$inYearSelector, {
-    print("Test")
     MapDataReactive$df <- filter(MapDataReactive$df, Year %in% input$inYearSelector)
+    updateSelectizeInput(session, "inYearSelector",
+                         choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
+    updateSelectizeInput(session, "inSubActionSelector",
+                         choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
+  })
+  
+  #Tags
+  observeEvent(input$inTagsSearch, {
+    
+    MapDataReactive$df <- MapDataFinal %>% 
+                          filter_all(any_vars(. %in% input$inTagsSearch))
+    
     updateSelectizeInput(session, "inYearSelector",
                          choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
     updateSelectizeInput(session, "inSubActionSelector",
