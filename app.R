@@ -30,6 +30,7 @@ library(stringr)
 library(readr)
 library(tidyr)
 library(splitstackshape)
+library(reshape2)
 ###########  UI Display Script ############
 ui <- fluidPage(theme = "styler.css",
 
@@ -40,13 +41,13 @@ ui <- fluidPage(theme = "styler.css",
       div(id = "main-panel",
           
           leafletOutput("leafmap"),
-          div( class= "key-overlay-container",
-              div(class = "key-overlay",
-                  div(class="key-text",
-                      HTML("Key")),
-                  div(class="key-image")
-              )
-          ),
+         # div( class= "key-overlay-container",
+            #  div(class = "key-overlay",
+             #     div(class="key-text",
+                    #  HTML("Key")),
+               #   div(class="key-image")
+             # )
+          #),
           div( class ="compass-overlay-container",
                div( class="compass-overlay")
           )
@@ -78,8 +79,9 @@ ui <- fluidPage(theme = "styler.css",
            #Filter output block - see output$Filters for rendering code
            div(
             class='filters',
-            uiOutput("Filters"),
-            uiOutput("KeyBar")
+            h5("Select an Action:"),
+            uiOutput("KeyBar"),
+            uiOutput("Filters")
            ),
       )
   )
@@ -178,21 +180,23 @@ server <- function(input, output, session) {
   }
 
    #Converting all characters to factors, and setting NAs to blank
-   MapData <- MapData %>%
-   mutate_if(is.character, as.factor)
+  
+   i <- sapply(MapData, is.factor)
+   MapData[i] <- lapply(MapData[i], as.character)
   
    MapData[is.na(MapData)] = ""
    MapData[is.null(MapData)] = ""
+   
+   ##### CREATING TAGSLIST FOR SEARCH FUNCTION #####
    
    #Pulls out list of Tags from MapDataFinal static frame 
    TagsList <- data.frame(MapData$Tags, stringsAsFactors = FALSE) %>%
      separate_rows(MapData.Tags, sep = ",") %>%
      unique()
-   
+
    #Splits texts to columns for the Tags and creating MapDataFinal 
+   
    MapDataFinal <- cSplit(MapData, "Tags", ",")
-     
-  # print(MapDataFinal)
    
    ## END DATA SETUP 
    
@@ -213,11 +217,6 @@ server <- function(input, output, session) {
   })
   
   
-  
-
-
-
-  
  #### END IMPORT DATA MOTIFICATIONS ####
     ## ****************************## 
           #### FILTERS #### 
@@ -228,65 +227,82 @@ server <- function(input, output, session) {
     req(ZoomExtent_V1)
     tagList(
       #Tag Word Search 
-      selectizeInput("inTagsSearch" , "Search:", choices = TagsList$MapData.Tags, multiple = TRUE),
+      selectizeInput("inTagsSearch" , "Search", choices = sort(c(TagsList$MapData.Tags, MapData$Action, MapData$SubAction, MapData$ProjectName), decreasing = FALSE), multiple = TRUE,  options = list(placeholder = 'What are you looking for?')),
       
       #Sub Action Selection
-      selectizeInput("inSubActionSelector", "Search by Sub Action:",
-                     choices = MapData$SubAction, multiple = TRUE, options = list(placeholder = 'All Sub Actions')),
+      selectizeInput("inSubActionSelector", "Search By Project Type",
+                     choices = MapData$SubAction, multiple = TRUE, options = list(placeholder = 'Select a Project Type!')),
       
       # Year
-      selectizeInput("inYearSelector", "Search by Year:",
+      selectizeInput("inYearSelector", "Filter By Year",
                      choices = MapData$Year, multiple = TRUE),
       
       # Zoom
-      selectizeInput("inZoomSelector", "Zoom to:",
-                     choices = ZoomExtent_V1$Extent, multiple = FALSE)
+      selectizeInput("inZoomSelector", "Map Location:",
+                     choices = ZoomExtent_V1$Extent, multiple = FALSE),
+      
+      actionButton("ResetAll", label = "Reset All")
     )
   })
   
   output$KeyBar <- renderUI({
     tagList(
-      actionButton("ResetAll", label = "Reset All"),
-      actionButton("Climate", label = "", style = "width: 50px; height: 50px;
+      actionButton("Climate", label = "", style = "width: 34px; height: 34px;
     background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Climate_and_Resiliency.png');  background-size: cover; background-position: center;"),
-      actionButton("Cleanups", label = "", style = "width: 50px; height: 50px;
-    background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Cleanups.png');  background-size: cover; background-position: center;"),
-      actionButton("Eco", label = "", style = "width: 50px; height: 50px;
-    background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Ecological_Restoration.png');  background-size: cover; background-position: center;"),
-      actionButton("Justice", label = "", style = "width: 50px; height: 50px;
-    background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Environmental_Justice.png');  background-size: cover; background-position: center;"),
-      actionButton("Healthy", label = "", style = "width: 50px; height: 50px;
+      actionButton("Healthy", label = "", style = "width: 34px; height: 34px;
     background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Healthy_Water.png');  background-size: cover; background-position: center;"),
-      actionButton("Lands", label = "", style = "width: 50px; height: 50px;
+      actionButton("Lands", label = "", style = "width: 34px; height: 34px;
     background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Protected_Lands.png');  background-size: cover; background-position: center;"),
-      actionButton("Monitoring", label = "", style = "width: 50px; height: 50px;
+      actionButton("Eco", label = "", style = "width: 34px; height: 34px;
+    background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Ecological_Restoration.png');  background-size: cover; background-position: center;"),
+      actionButton("Justice", label = "", style = "width: 34px; height: 34px;
+    background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Environmental_Justice.png');  background-size: cover; background-position: center;"),
+      actionButton("Monitoring", label = "", style = "width: 34px; height: 34px;
     background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Water_Monitoring.png');  background-size: cover; background-position: center;"),
+      actionButton("Cleanups", label = "", style = "width: 34px; height: 34px;
+    background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Cleanups.png');  background-size: cover; background-position: center;"),
+      actionButton("SoundKeeper", label = "", style = "width: 60px; height: 29px;
+    background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Soundkeeper.png');  background-size: cover; background-position: center;"),
     )
   })
   
   # #### FILTER INPUT DATA HANDLING ###
+  
+  #ReactiveVal for handling MapData
   MapDataReactive <- reactiveValues(df = data.frame())
   MapDataReactive$df <- as.data.frame(MapDataFinal)
   
-  print(nrow(isolate(MapDataReactive$df)))
-  print(nrow(MapDataFinal))
-  
+  ## Function for handling Action Button Clicks
   buttonUpdate <- function(y)
   {
-    print(MapDataReactive$df$Action)
-      if(nrow(MapDataReactive$df) == nrow(MapDataFinal))
+    
+    #Logic Block
+    #If action selected is in dataframe and dataframe isn't the default 
+        #If theres only one action selected - do nothing 
+        #Else, remove the selected action from dataframe 
+      #Else, add selected action to dataframe 
+    if(y %in% MapDataReactive$df$Action && nrow(MapDataReactive$df) != nrow(MapDataFinal))
+    {
+      if((nrow(data.frame(unique(MapDataReactive$df$Action)))) == 1)
       {
-        MapDataReactive$df <- filter(MapDataFinal, Action == y)
+      MapDataReactive$df <- MapDataReactive$df
       }
-    #Section if they want it to be subtractive instead of additive 
-      # else if(MapDataReactive$df$Action %in% y)
-      # {
-      #   MapDataReactive$df <- subset(MapDataReactive$df, Action == y)
-      # }
       else
       {
-        MapDataReactive$df <- unique(rbind(MapDataReactive$df, filter(MapDataFinal, Action == y)))
+      MapDataReactive$df <- filter(MapDataReactive$df, Action != y)
       }
+    }
+    else
+    {
+      MapDataReactive$df <- unique(rbind(MapDataReactive$df, filter(MapDataFinal, Action == y)))
+    }
+    
+    #If entire dataset is present, only select the chosen action 
+    if(nrow(MapDataReactive$df) == nrow(MapDataFinal))
+    {
+       MapDataReactive$df <- filter(MapDataFinal, Action == y)
+    }
+     # print(data.frame(unique(MapDataReactive$df$Action)))
       updateSelectizeInput(session, "inYearSelector",
                            choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
       updateSelectizeInput(session, "inSubActionSelector",
@@ -296,34 +312,27 @@ server <- function(input, output, session) {
   #Reset
   observeEvent(input$ResetAll, {
     MapDataReactive$df <- as.data.frame(MapDataFinal)
+    
+    updateSelectizeInput(session, "inTagsSearch",
+                         choices = sort(c(TagsList$MapData.Tags, MapData$Action, MapData$SubAction, MapData$ProjectName), decreasing = FALSE), options = list(placeholder = 'What are you looking for?'))
+    
     updateSelectizeInput(session, "inYearSelector",
                          choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
     updateSelectizeInput(session, "inSubActionSelector",
                          choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
   })
   
-  #MapDataUpdate Function Wrapped in an observe Event, ooooh its so much cleaner than before!
+  #ButtonUpdate Function wrapped in an observe Event, ooooh its so much cleaner than before!
   observeEvent(input$Cleanups,{buttonUpdate("Cleanups")})
   observeEvent(input$Climate,{buttonUpdate("Climate & Resiliency")})
   observeEvent(input$Eco,{buttonUpdate("Ecological Restoration")})
-  observeEvent(input$Justice,{buttonUpdate("Environmental Justice")})
+  observeEvent(input$Justice,{buttonUpdate("Legal")})
   observeEvent(input$Healthy,{buttonUpdate("Healthy Waters")})
   observeEvent(input$Lands,{buttonUpdate("Protected Lands")})
   observeEvent(input$Monitoring,{buttonUpdate("Water Monitoring")})
-  
-  #### TESTING NEW FUNCTION #### 
-  # filterUpdate <- function(x,y)
-  # {
-  #   MapDataReactive$df <- filter(MapDataReactive$df, MapDataReactive$df[x] %in% y)
-  #   updateSelectizeInput(session, "inSubActionSelector",
-  #                        choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
-  #   updateSelectizeInput(session, "inYearSelector",
-  #                        choices = sort(MapDataReactive$df$Year, decreasing = TRUE))  
-  # }
-  # observeEvent(input$inSubActionSelector, {filterUpdate("SubAction",'input$inSubActionSelector')})
-  
+  observeEvent(input$SoundKeeper,{buttonUpdate("SoundKeeper")})
 
-  #SubAction
+  #SubAction Update
   observeEvent(input$inSubActionSelector, {
     MapDataReactive$df <- filter(MapDataReactive$df, SubAction %in% input$inSubActionSelector)
     updateSelectizeInput(session, "inSubActionSelector",
@@ -332,7 +341,7 @@ server <- function(input, output, session) {
                          choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
   })
 
-  #Year
+  #Year Update
   observeEvent(input$inYearSelector, {
     MapDataReactive$df <- filter(MapDataReactive$df, Year %in% input$inYearSelector)
     updateSelectizeInput(session, "inYearSelector",
@@ -341,12 +350,11 @@ server <- function(input, output, session) {
                          choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
   })
   
-  #Tags
+  #Tags Update
   observeEvent(input$inTagsSearch, {
     
     MapDataReactive$df <- MapDataFinal %>% 
                           filter_all(any_vars(. %in% input$inTagsSearch))
-    
     updateSelectizeInput(session, "inYearSelector",
                          choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
     updateSelectizeInput(session, "inSubActionSelector",
@@ -384,7 +392,7 @@ server <- function(input, output, session) {
   output$leafmap <- renderLeaflet({
      leaflet(options = leafletOptions(zoomControl = FALSE)) %>%
        addPolygons(data = STS_Boat, fill = FALSE, weight = 2, dashArray = "5", color = "grey") %>%
-       addPolygons(data = EJLayer, color = "#00aea7", weight = 1, group = "Environmental Justice Areas") %>%
+       addPolygons(data = EJLayer, color = "#b57edc", weight = 1, group = "Environmental Justice Areas") %>%
        addProviderTiles("CartoDB.VoyagerLabelsUnder", group = "Streets") %>%
        addProviderTiles("Esri.WorldTopoMap", group = "Terrain")%>%
        addProviderTiles("GeoportailFrance.orthos", group = "Satellite")%>%
