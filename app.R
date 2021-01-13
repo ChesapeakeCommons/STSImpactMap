@@ -55,15 +55,15 @@ ui <- fluidPage(theme = "styler.css",
       
   # Side Panel Display with Save the Sound Info
   ),
-  div(id = "side-panel",
-      HTML("<a href='http://www.savethesound.org' style='color:#ffffff'>"),
+  div(id = "side-panel", dir="lrt",
+      HTML("<a href='http://www.savethesound.org' style='color:#ffffff;'>"),
       div(  id = "title"
             
       #Descriptive Text 
       ),
       HTML("</>"),
      
-      div( id = "side-panel-wrapper",
+      div( id = "side-panel-wrapper", dir="ltr",
            div(class = "side-panel-description side-panel-goback",
              HTML("<a href='http://www.savethesound.org' style='color:#ffffff'>Go Back!</a>")
            ),
@@ -248,52 +248,52 @@ server <- function(input, output, session) {
   output$KeyBar <- renderUI({
     tagList( 
       div(id='action-button-container',
-        HTML("<div class='button-row'>"),
+        HTML("<div class='button-row' style='margin-top:0px'>"),
           HTML("<div class='button-wrapper'>"),
             HTML("<div class='button'>"),
-              actionButton("Climate", label = "", style = "width: 34px; height: 34px; margin: 0 auto;
+              actionButton("Climate", label = "", class="side-panel-buttons", style = "
               background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Climate_and_Resiliency.png');  background-size: cover; background-position: center;"),
             HTML("</div><div class='button_label'>Climate\n</div></div>"),
           HTML("<div class='button-wrapper'>"),
             HTML("<div class='button'>"),
-              actionButton("Healthy", label = "", style = "width: 34px; height: 34px; margin: 0 auto;
+              actionButton("Healthy", label = "", class="side-panel-buttons", style = "
                 background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Healthy_Water.png');  background-size: cover; background-position: center;"),
             HTML("</div><div class='button_label'>Healthy Waters</div></div>"),
           HTML("<div class='button-wrapper'>"),
             HTML("<div class='button'>"),
-              actionButton("Lands", label = "", style = "width: 34px; height: 34px; margin: 0 auto;
+              actionButton("Lands", label = "", class="side-panel-buttons", style = "
               background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Protected_Lands.png');  background-size: cover; background-position: center;"),
             HTML("</div><div class='button_label'>Protected Lands</div></div>"),
           HTML("<div class='button-wrapper'>"),
             HTML("<div class='button'>"),
-              actionButton("Eco", label = "", style = "width: 34px; height: 34px; margin: 0 auto;
+              actionButton("Eco", label = "", class="side-panel-buttons", style = "
               background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Ecological_Restoration.png');  background-size: cover; background-position: center;"),
             HTML("</div><div class='button_label'>Ecological Restoration</div></div>"),
        
         HTML("
           </div>
           "),
-        HTML("<div class='button-row'>"),
+        HTML("<div class='button-row' style='padding-bottom:10px'>"),
           HTML("<div class='button-wrapper'>"),
             HTML("<div class='button'>"),
-              actionButton("Justice", label = "", style = "width: 34px; height: 34px; margin: 0 auto;
+              actionButton("Justice", label = "", class="side-panel-buttons", style = "
               background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Environmental_Justice.png');  background-size: cover; background-position: center;"),
             HTML("</div><div class='button_label'>Environment Justice</div></div>"),
           HTML("<div class='button-wrapper'>"),
             HTML("<div class='button'>"),
-              actionButton("Monitoring", label = "", style = "width: 34px; height: 34px; margin: 0 auto;
+              actionButton("Monitoring", label = "",class="side-panel-buttons", style = "
               background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Water_Monitoring.png');  background-size: cover; background-position: center;"),
             HTML("</div><div class='button_label'>Water Monitoring</div></div>"),
           HTML("<div class='button-wrapper'>"),
             HTML("<div class='button'>"),
-              actionButton("Cleanups", label = "", style = "width: 34px; height: 34px; margin: 0 auto;
+              actionButton("Cleanups", label = "", class="side-panel-buttons", style = "
               background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Cleanups.png');  background-size: cover; background-position: center;"),
             HTML("</div><div class='button_label'>Cleanups</div></div>"),
           HTML("<div class='button-wrapper'>"),
             HTML("<div class='button'>"),
-              actionButton("SoundKeeper", label = "", style = "width: 60px; height: 29px; margin: 0 auto;
+              actionButton("SoundKeeper", label = "", class="side-panel-buttons-boat", style = "
               background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Soundkeeper.png');  background-size: cover; background-position: center;"),
-            HTML("</div><div class='button_label' style='margin-left:7px'>Soundkeeper</div></div>"),
+            HTML("</div><div class='button_label' style='margin-left:3px;margin-top:10px;'>Soundkeeper</div></div>"),
           HTML("</div>")
         )
     
