@@ -246,24 +246,59 @@ server <- function(input, output, session) {
   })
   
   output$KeyBar <- renderUI({
-    tagList(
-      actionButton("Climate", label = "", style = "width: 34px; height: 34px;
-    background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Climate_and_Resiliency.png');  background-size: cover; background-position: center;"),
-      actionButton("Healthy", label = "", style = "width: 34px; height: 34px;
-    background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Healthy_Water.png');  background-size: cover; background-position: center;"),
-      actionButton("Lands", label = "", style = "width: 34px; height: 34px;
-    background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Protected_Lands.png');  background-size: cover; background-position: center;"),
-      actionButton("Eco", label = "", style = "width: 34px; height: 34px;
-    background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Ecological_Restoration.png');  background-size: cover; background-position: center;"),
-      actionButton("Justice", label = "", style = "width: 34px; height: 34px;
-    background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Environmental_Justice.png');  background-size: cover; background-position: center;"),
-      actionButton("Monitoring", label = "", style = "width: 34px; height: 34px;
-    background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Water_Monitoring.png');  background-size: cover; background-position: center;"),
-      actionButton("Cleanups", label = "", style = "width: 34px; height: 34px;
-    background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Cleanups.png');  background-size: cover; background-position: center;"),
-      actionButton("SoundKeeper", label = "", style = "width: 60px; height: 29px;
-    background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Soundkeeper.png');  background-size: cover; background-position: center;"),
+    tagList( 
+      div(id='action-button-container',
+        HTML("<div class='button-row'>"),
+          HTML("<div class='button-wrapper'>"),
+            HTML("<div class='button'>"),
+              actionButton("Climate", label = "", style = "width: 34px; height: 34px; margin: 0 auto;
+              background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Climate_and_Resiliency.png');  background-size: cover; background-position: center;"),
+            HTML("</div><div class='button_label'>Climate\n</div></div>"),
+          HTML("<div class='button-wrapper'>"),
+            HTML("<div class='button'>"),
+              actionButton("Healthy", label = "", style = "width: 34px; height: 34px; margin: 0 auto;
+                background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Healthy_Water.png');  background-size: cover; background-position: center;"),
+            HTML("</div><div class='button_label'>Healthy Waters</div></div>"),
+          HTML("<div class='button-wrapper'>"),
+            HTML("<div class='button'>"),
+              actionButton("Lands", label = "", style = "width: 34px; height: 34px; margin: 0 auto;
+              background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Protected_Lands.png');  background-size: cover; background-position: center;"),
+            HTML("</div><div class='button_label'>Protected Lands</div></div>"),
+          HTML("<div class='button-wrapper'>"),
+            HTML("<div class='button'>"),
+              actionButton("Eco", label = "", style = "width: 34px; height: 34px; margin: 0 auto;
+              background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Ecological_Restoration.png');  background-size: cover; background-position: center;"),
+            HTML("</div><div class='button_label'>Ecological Restoration</div></div>"),
+       
+        HTML("
+          </div>
+          "),
+        HTML("<div class='button-row'>"),
+          HTML("<div class='button-wrapper'>"),
+            HTML("<div class='button'>"),
+              actionButton("Justice", label = "", style = "width: 34px; height: 34px; margin: 0 auto;
+              background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Environmental_Justice.png');  background-size: cover; background-position: center;"),
+            HTML("</div><div class='button_label'>Environment Justice</div></div>"),
+          HTML("<div class='button-wrapper'>"),
+            HTML("<div class='button'>"),
+              actionButton("Monitoring", label = "", style = "width: 34px; height: 34px; margin: 0 auto;
+              background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Water_Monitoring.png');  background-size: cover; background-position: center;"),
+            HTML("</div><div class='button_label'>Water Monitoring</div></div>"),
+          HTML("<div class='button-wrapper'>"),
+            HTML("<div class='button'>"),
+              actionButton("Cleanups", label = "", style = "width: 34px; height: 34px; margin: 0 auto;
+              background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Cleanups.png');  background-size: cover; background-position: center;"),
+            HTML("</div><div class='button_label'>Cleanups</div></div>"),
+          HTML("<div class='button-wrapper'>"),
+            HTML("<div class='button'>"),
+              actionButton("SoundKeeper", label = "", style = "width: 60px; height: 29px; margin: 0 auto;
+              background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Soundkeeper.png');  background-size: cover; background-position: center;"),
+            HTML("</div><div class='button_label' style='margin-left:7px'>Soundkeeper</div></div>"),
+          HTML("</div>")
+        )
+    
     )
+    
   })
   
   # #### FILTER INPUT DATA HANDLING ###
