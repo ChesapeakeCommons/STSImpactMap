@@ -160,12 +160,14 @@ body
   margin: 0 auto;
   text-align: center;
   display: block;
+  background-position: center;
+  align-content: center;
 }
 .button_label{
 
   position:relative;
   clear: left;
-  font-size: 8px;
+  font-size: 9px;
   margin: 0 auto;
   display: block;
   text-align: center;
@@ -173,7 +175,9 @@ body
   
 }
 .btn{
-  border-radius: 9px;
+  border-radius: 9px; 
+  margin: 0 auto !important;
+  margin-top: 8px !important;
   
 }
 
@@ -520,7 +524,7 @@ p {
      
      width: 130px;
      height: 250px;
-     padding-top: 7px;
+     padding-top: 0px;
 
   }
   .button-row{
