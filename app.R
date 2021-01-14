@@ -31,10 +31,11 @@ library(readr)
 library(tidyr)
 library(splitstackshape)
 library(reshape2)
+library(shinyjs)
 ###########  UI Display Script ############
 ui <- fluidPage(theme = "styler.css",
 
- 
+  shinyjs::useShinyjs(),
   ### DISPLAY COMPONENTS ###
   div(id = "wrapper",
       #Map
@@ -245,13 +246,16 @@ server <- function(input, output, session) {
     )
   })
   
+  
+  
   output$KeyBar <- renderUI({
     tagList( 
       div(id='action-button-container',
         HTML("<div class='button-row' style='margin-top:0px'>"),
           HTML("<div class='button-wrapper'>"),
             HTML("<div class='button'>"),
-              actionButton("Climate", label = "", class="side-panel-buttons", style = "
+          
+              actionButton("Climate", label = "", class="side-panel-buttons",  style = "
               background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Climate_and_Resiliency.png');  background-size: cover; background-position: center;"),
             HTML("</div><div class='button_label'>Climate\n</div></div>"),
           HTML("<div class='button-wrapper'>"),
@@ -337,6 +341,19 @@ server <- function(input, output, session) {
     {
        MapDataReactive$df <- filter(MapDataFinal, Action == y)
     }
+    
+    if("Climate & Resiliency" %in% MapDataReactive$df$Action)
+    {
+       
+          runjs(paste0('$("#Climate").css({"box-shadow": "0 0 5px 2px rgba(256,256,256,0.9)"})'))
+         # addClass(id = "Climate", class = "side-panel-buttons btn-selected", selector = NULL, asis = FALSE)
+      #    updateActionButton(session,"Climate", class="side-panel-buttons btn-selected")
+    }else{
+      runjs(paste0('$("#Climate").css({"box-shadow": "unset"})'))
+    }
+    
+  
+    
      # print(data.frame(unique(MapDataReactive$df$Action)))
       updateSelectizeInput(session, "inYearSelector",
                            choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
@@ -366,6 +383,7 @@ server <- function(input, output, session) {
   observeEvent(input$Lands,{buttonUpdate("Protected Lands")})
   observeEvent(input$Monitoring,{buttonUpdate("Water Monitoring")})
   observeEvent(input$SoundKeeper,{buttonUpdate("SoundKeeper")})
+
 
   #SubAction Update
   observeEvent(input$inSubActionSelector, {
