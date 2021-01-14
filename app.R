@@ -337,7 +337,7 @@ server <- function(input, output, session) {
     {
        MapDataReactive$df <- filter(MapDataFinal, Action == y)
     }
-     # print(data.frame(unique(MapDataReactive$df$Action)))
+    print(unique(MapDataReactive$df$Action))
       updateSelectizeInput(session, "inYearSelector",
                            choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
       updateSelectizeInput(session, "inSubActionSelector",
