@@ -31,10 +31,11 @@ library(readr)
 library(tidyr)
 library(splitstackshape)
 library(reshape2)
+library(shinyjs)
 ###########  UI Display Script ############
 ui <- fluidPage(theme = "styler.css",
 
- 
+  shinyjs::useShinyjs(),
   ### DISPLAY COMPONENTS ###
   div(id = "wrapper",
       #Map
@@ -245,28 +246,31 @@ server <- function(input, output, session) {
     )
   })
   
+  
+  
   output$KeyBar <- renderUI({
     tagList( 
       div(id='action-button-container',
         HTML("<div class='button-row' style='margin-top:0px'>"),
           HTML("<div class='button-wrapper'>"),
             HTML("<div class='button'>"),
-              actionButton("Climate", label = "", class="side-panel-buttons", style = "
+          
+              actionButton("Climate & Resiliency", label = "", class="side-panel-buttons",  style = "
               background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Climate_and_Resiliency.png');  background-size: cover; background-position: center;"),
-            HTML("</div><div class='button_label'>Climate\n</div></div>"),
+            HTML("</div><div class='button_label'>Climate & Resiliency</div></div>"),
           HTML("<div class='button-wrapper'>"),
             HTML("<div class='button'>"),
-              actionButton("Healthy", label = "", class="side-panel-buttons", style = "
+              actionButton("Healthy Waters", label = "", class="side-panel-buttons", style = "
                 background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Healthy_Water.png');  background-size: cover; background-position: center;"),
             HTML("</div><div class='button_label'>Healthy Waters</div></div>"),
           HTML("<div class='button-wrapper'>"),
             HTML("<div class='button'>"),
-              actionButton("Lands", label = "", class="side-panel-buttons", style = "
+              actionButton("Protected Lands", label = "", class="side-panel-buttons", style = "
               background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Protected_Lands.png');  background-size: cover; background-position: center;"),
             HTML("</div><div class='button_label'>Protected Lands</div></div>"),
           HTML("<div class='button-wrapper'>"),
             HTML("<div class='button'>"),
-              actionButton("Eco", label = "", class="side-panel-buttons", style = "
+              actionButton("Ecological Restoration", label = "", class="side-panel-buttons", style = "
               background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Ecological_Restoration.png');  background-size: cover; background-position: center;"),
             HTML("</div><div class='button_label'>Ecological Restoration</div></div>"),
        
@@ -276,12 +280,12 @@ server <- function(input, output, session) {
         HTML("<div class='button-row' style='padding-bottom:10px'>"),
           HTML("<div class='button-wrapper'>"),
             HTML("<div class='button'>"),
-              actionButton("Justice", label = "", class="side-panel-buttons", style = "
+              actionButton("Legal", label = "", class="side-panel-buttons", style = "
               background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Environmental_Justice.png');  background-size: cover; background-position: center;"),
-            HTML("</div><div class='button_label'>Environment Justice</div></div>"),
+            HTML("</div><div class='button_label'>Legal</div></div>"),
           HTML("<div class='button-wrapper'>"),
             HTML("<div class='button'>"),
-              actionButton("Monitoring", label = "",class="side-panel-buttons", style = "
+              actionButton("Water Monitoring", label = "",class="side-panel-buttons", style = "
               background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Water_Monitoring.png');  background-size: cover; background-position: center;"),
             HTML("</div><div class='button_label'>Water Monitoring</div></div>"),
           HTML("<div class='button-wrapper'>"),
@@ -337,7 +341,17 @@ server <- function(input, output, session) {
     {
        MapDataReactive$df <- filter(MapDataFinal, Action == y)
     }
-    print(unique(MapDataReactive$df$Action))
+
+    print(y)
+    if(y %in% MapDataReactive$df$Action)
+    {
+       
+          runjs(paste0('$("#',y,'").css({"box-shadow": "0 0 5px 2px rgba(256,256,256,0.9)"})', sep = ""))
+      
+    }else{
+      runjs(paste0('$("#',y,'").css({"box-shadow": "unset"})', sep = ""))
+    }
+    
       updateSelectizeInput(session, "inYearSelector",
                            choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
       updateSelectizeInput(session, "inSubActionSelector",
@@ -359,13 +373,14 @@ server <- function(input, output, session) {
   
   #ButtonUpdate Function wrapped in an observe Event, ooooh its so much cleaner than before!
   observeEvent(input$Cleanups,{buttonUpdate("Cleanups")})
-  observeEvent(input$Climate,{buttonUpdate("Climate & Resiliency")})
-  observeEvent(input$Eco,{buttonUpdate("Ecological Restoration")})
-  observeEvent(input$Justice,{buttonUpdate("Legal")})
-  observeEvent(input$Healthy,{buttonUpdate("Healthy Waters")})
-  observeEvent(input$Lands,{buttonUpdate("Protected Lands")})
-  observeEvent(input$Monitoring,{buttonUpdate("Water Monitoring")})
+  observeEvent(input$`Climate & Resiliency`,{buttonUpdate("Climate & Resiliency")})
+  observeEvent(input$`Ecological Restoration`,{buttonUpdate("Ecological Restoration")})
+  observeEvent(input$Legal,{buttonUpdate("Legal")})
+  observeEvent(input$`Healthy Waters`,{buttonUpdate("Healthy Waters")})
+  observeEvent(input$`Protected Lands`,{buttonUpdate("Protected Lands")})
+  observeEvent(input$`Water Monitoring`,{buttonUpdate("Water Monitoring")})
   observeEvent(input$SoundKeeper,{buttonUpdate("SoundKeeper")})
+
 
   #SubAction Update
   observeEvent(input$inSubActionSelector, {
