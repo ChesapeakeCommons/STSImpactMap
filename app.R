@@ -255,25 +255,24 @@ server <- function(input, output, session) {
           HTML("<div class='button-wrapper'>"),
             HTML("<div class='button'>"),
           
-              actionButton("Climate & Resiliency", label = "", class="side-panel-buttons",  style = "
+              actionButton("ClimateResiliency", label = "", class="side-panel-buttons",  style = "
               background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Climate_and_Resiliency.png');  background-size: cover; background-position: center;"),
             HTML("</div><div class='button_label'>Climate & Resiliency</div></div>"),
           HTML("<div class='button-wrapper'>"),
             HTML("<div class='button'>"),
-              actionButton("Healthy Waters", label = "", class="side-panel-buttons", style = "
+              actionButton("HealthyWaters", label = "", class="side-panel-buttons", style = "
                 background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Healthy_Water.png');  background-size: cover; background-position: center;"),
             HTML("</div><div class='button_label'>Healthy Waters</div></div>"),
           HTML("<div class='button-wrapper'>"),
             HTML("<div class='button'>"),
-              actionButton("Protected Lands", label = "", class="side-panel-buttons", style = "
+              actionButton("ProtectedLands", label = "", class="side-panel-buttons", style = "
               background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Protected_Lands.png');  background-size: cover; background-position: center;"),
             HTML("</div><div class='button_label'>Protected Lands</div></div>"),
           HTML("<div class='button-wrapper'>"),
             HTML("<div class='button'>"),
-              actionButton("Ecological Restoration", label = "", class="side-panel-buttons", style = "
+              actionButton("EcologicalRestoration", label = "", class="side-panel-buttons", style = "
               background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Ecological_Restoration.png');  background-size: cover; background-position: center;"),
             HTML("</div><div class='button_label'>Ecological Restoration</div></div>"),
-       
         HTML("
           </div>
           "),
@@ -285,7 +284,7 @@ server <- function(input, output, session) {
             HTML("</div><div class='button_label'>Legal</div></div>"),
           HTML("<div class='button-wrapper'>"),
             HTML("<div class='button'>"),
-              actionButton("Water Monitoring", label = "",class="side-panel-buttons", style = "
+              actionButton("WaterMonitoring", label = "",class="side-panel-buttons", style = "
               background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Water_Monitoring.png');  background-size: cover; background-position: center;"),
             HTML("</div><div class='button_label'>Water Monitoring</div></div>"),
           HTML("<div class='button-wrapper'>"),
@@ -314,14 +313,19 @@ server <- function(input, output, session) {
   ## Function for handling Action Button Clicks
   buttonUpdate <- function(y)
   {
+    #Turning the input Action Text into the button names 
+    z <- str_remove_all(as.character(y)," ")
+    z <- str_remove(z,"&")
     
     #Logic Block
     #If action selected is in dataframe and dataframe isn't the default 
         #If theres only one action selected - do nothing 
         #Else, remove the selected action from dataframe 
-      #Else, add selected action to dataframe 
+        #Else, add selected action to dataframe 
     if(y %in% MapDataReactive$df$Action && nrow(MapDataReactive$df) != nrow(MapDataFinal))
     {
+      
+      
       if((nrow(data.frame(unique(MapDataReactive$df$Action)))) == 1)
       {
       MapDataReactive$df <- MapDataReactive$df
@@ -342,14 +346,13 @@ server <- function(input, output, session) {
        MapDataReactive$df <- filter(MapDataFinal, Action == y)
     }
 
-    print(y)
     if(y %in% MapDataReactive$df$Action)
     {
-       
-          runjs(paste0('$("#',y,'").css({"box-shadow": "0 0 5px 2px rgba(256,256,256,0.9)"})', sep = ""))
+          print(z)
+          runjs(paste0('$("#',z,'").css({"box-shadow": "0 0 5px 2px rgba(256,256,256,0.9)"})', sep = ""))
       
     }else{
-      runjs(paste0('$("#',y,'").css({"box-shadow": "unset"})', sep = ""))
+      runjs(paste0('$("#',z,'").css({"box-shadow": "unset"})', sep = ""))
     }
     
       updateSelectizeInput(session, "inYearSelector",
@@ -358,27 +361,42 @@ server <- function(input, output, session) {
                            choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
   }
   
-  #Reset
+  #ResetAll
   observeEvent(input$ResetAll, {
+    
+    #Removes the halo from actions when reset
+    df <- data.frame(unique(MapDataReactive$df$Action))
+    names(df)[1] <- "Action"
+    for (row in 1:nrow(df))
+    {
+      z <- str_remove_all(df$Action[row]," ")
+      z <- str_remove_all(z,"&")
+      runjs(paste0('$("#',z,'").css({"box-shadow": "unset"})', sep = ""))
+    }
+    
+    #Sets the MapDataReactive$df to be all
     MapDataReactive$df <- as.data.frame(MapDataFinal)
     
+    #Updates the seletize Inputs 
     updateSelectizeInput(session, "inTagsSearch",
                          choices = sort(c(TagsList$MapData.Tags, MapData$Action, MapData$SubAction, MapData$ProjectName), decreasing = FALSE), options = list(placeholder = 'What are you looking for?'))
-    
     updateSelectizeInput(session, "inYearSelector",
                          choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
     updateSelectizeInput(session, "inSubActionSelector",
                          choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
+    
+    
+
   })
   
   #ButtonUpdate Function wrapped in an observe Event, ooooh its so much cleaner than before!
   observeEvent(input$Cleanups,{buttonUpdate("Cleanups")})
-  observeEvent(input$`Climate & Resiliency`,{buttonUpdate("Climate & Resiliency")})
-  observeEvent(input$`Ecological Restoration`,{buttonUpdate("Ecological Restoration")})
+  observeEvent(input$ClimateResiliency,{buttonUpdate("Climate & Resiliency")})
+  observeEvent(input$EcologicalRestoration,{buttonUpdate("Ecological Restoration")})
   observeEvent(input$Legal,{buttonUpdate("Legal")})
-  observeEvent(input$`Healthy Waters`,{buttonUpdate("Healthy Waters")})
-  observeEvent(input$`Protected Lands`,{buttonUpdate("Protected Lands")})
-  observeEvent(input$`Water Monitoring`,{buttonUpdate("Water Monitoring")})
+  observeEvent(input$HealthyWaters,{buttonUpdate("Healthy Waters")})
+  observeEvent(input$ProtectedLands,{buttonUpdate("Protected Lands")})
+  observeEvent(input$WaterMonitoring,{buttonUpdate("Water Monitoring")})
   observeEvent(input$SoundKeeper,{buttonUpdate("SoundKeeper")})
 
 
