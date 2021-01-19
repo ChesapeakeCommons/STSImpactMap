@@ -363,17 +363,7 @@ server <- function(input, output, session) {
   
   #ResetAll
   observeEvent(input$ResetAll, {
-    
-    #Removes the halo from actions when reset
-    df <- data.frame(unique(MapDataReactive$df$Action))
-    names(df)[1] <- "Action"
-    for (row in 1:nrow(df))
-    {
-      z <- str_remove_all(df$Action[row]," ")
-      z <- str_remove_all(z,"&")
-      runjs(paste0('$("#',z,'").css({"box-shadow": "unset"})', sep = ""))
-    }
-    
+
     #Sets the MapDataReactive$df to be all
     MapDataReactive$df <- as.data.frame(MapDataFinal)
     
@@ -385,7 +375,15 @@ server <- function(input, output, session) {
     updateSelectizeInput(session, "inSubActionSelector",
                          choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
     
-    
+    #Removes the halo from actions when reset
+    df <- data.frame(unique(MapDataReactive$df$Action))
+    names(df)[1] <- "Action"
+    for (row in 1:nrow(df))
+    {
+      z <- str_remove_all(df$Action[row]," ")
+      z <- str_remove_all(z,"&")
+      runjs(paste0('$("#',z,'").css({"box-shadow": "unset"})', sep = ""))
+    }
 
   })
   
