@@ -347,7 +347,7 @@ server <- function(input, output, session) {
     if(y %in% MapDataReactive$df$Action)
     {
           print(z)
-          runjs(paste0('$("#',z,'").css({"background": "url(\'https://www.savethesound.org/wp-content/uploads/2021/01/Inactive_Icon_Climate_and_Resiliency.png\')" "background-size": "cover"; "background-position": "center"; })', sep = ""))
+          runjs(paste0('$("#',z,'").css({"background": "url(\'https://www.savethesound.org/wp-content/uploads/2021/01/Inactive_Icon_Climate_and_Resiliency.png\')", "background-size": "cover", "background-position": "center" })', sep = ""))
           
     }else{
       runjs(paste0('$("#',z,'").css({"box-shadow": "unset"})', sep = ""))
