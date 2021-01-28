@@ -255,23 +255,23 @@ server <- function(input, output, session) {
           HTML("<div class='button-wrapper'>"),
             HTML("<div class='button'>"),
           
-              actionButton("ClimateResiliency", label = "", class="side-panel-buttons",  style = "
-              background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Climate_and_Resiliency.png');  background-size: cover; background-position: center;"),
+              actionButton("ClimateResiliency", label = "", class="side-panel-buttons",  style = paste("
+              background: url('",Symbology_V1$Marker[2],"');  background-size: cover; background-position: center;")),
             HTML("</div><div class='button_label'>Climate & Resiliency</div></div>"),
           HTML("<div class='button-wrapper'>"),
             HTML("<div class='button'>"),
-              actionButton("HealthyWaters", label = "", class="side-panel-buttons", style = "
-                background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Healthy_Water.png');  background-size: cover; background-position: center;"),
+              actionButton("HealthyWaters", label = "", class="side-panel-buttons", style = paste("
+              background: url('",Symbology_V1$Marker[5],"');  background-size: cover; background-position: center;")),
             HTML("</div><div class='button_label'>Healthy Waters</div></div>"),
           HTML("<div class='button-wrapper'>"),
             HTML("<div class='button'>"),
-              actionButton("ProtectedLands", label = "", class="side-panel-buttons", style = "
-              background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Protected_Lands.png');  background-size: cover; background-position: center;"),
+              actionButton("ProtectedLands", label = "", class="side-panel-buttons", style = paste("
+              background: url('",Symbology_V1$Marker[6],"');  background-size: cover; background-position: center;")),
             HTML("</div><div class='button_label'>Protected Lands</div></div>"),
           HTML("<div class='button-wrapper'>"),
             HTML("<div class='button'>"),
-              actionButton("EcologicalRestoration", label = "", class="side-panel-buttons", style = "
-              background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Ecological_Restoration.png');  background-size: cover; background-position: center;"),
+              actionButton("EcologicalRestoration", label = "", class="side-panel-buttons", style = paste("
+              background: url('",Symbology_V1$Marker[3],"');  background-size: cover; background-position: center;")),
             HTML("</div><div class='button_label'>Ecological Restoration</div></div>"),
         HTML("
           </div>
@@ -279,23 +279,23 @@ server <- function(input, output, session) {
         HTML("<div class='button-row' style='padding-bottom:10px'>"),
           HTML("<div class='button-wrapper'>"),
             HTML("<div class='button'>"),
-              actionButton("Legal", label = "", class="side-panel-buttons", style = "
-              background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Environmental_Justice.png');  background-size: cover; background-position: center;"),
+              actionButton("Legal", label = "", class="side-panel-buttons", style = paste("
+              background: url('",Symbology_V1$Marker[4],"');  background-size: cover; background-position: center;")),
             HTML("</div><div class='button_label'>Legal</div></div>"),
           HTML("<div class='button-wrapper'>"),
             HTML("<div class='button'>"),
-              actionButton("WaterMonitoring", label = "",class="side-panel-buttons", style = "
-              background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Water_Monitoring.png');  background-size: cover; background-position: center;"),
+              actionButton("WaterMonitoring", label = "",class="side-panel-buttons", style = paste("
+              background: url('",Symbology_V1$Marker[7],"');  background-size: cover; background-position: center;")),
             HTML("</div><div class='button_label'>Water Monitoring</div></div>"),
           HTML("<div class='button-wrapper'>"),
             HTML("<div class='button'>"),
-              actionButton("Cleanups", label = "", class="side-panel-buttons", style = "
-              background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Cleanups.png');  background-size: cover; background-position: center;"),
+              actionButton("Cleanups", label = "", class="side-panel-buttons", style = paste("
+              background: url('",Symbology_V1$Marker[1],"');  background-size: cover; background-position: center;")),
             HTML("</div><div class='button_label'>Cleanups</div></div>"),
           HTML("<div class='button-wrapper'>"),
             HTML("<div class='button'>"),
-              actionButton("SoundKeeper", label = "", class="side-panel-buttons-boat", style = "
-              background: url('https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Soundkeeper.png');  background-size: cover; background-position: center;"),
+              actionButton("SoundKeeper", label = "", class="side-panel-buttons-boat", style = paste("
+              background: url('",Symbology_V1$Marker[8],"');  background-size: cover; background-position: center;")),
             HTML("</div><div class='button_label' style='margin-left:3px;margin-top:10px;'>Soundkeeper</div></div>"),
           HTML("</div>")
         )
@@ -324,8 +324,6 @@ server <- function(input, output, session) {
         #Else, add selected action to dataframe 
     if(y %in% MapDataReactive$df$Action && nrow(MapDataReactive$df) != nrow(MapDataFinal))
     {
-      
-      
       if((nrow(data.frame(unique(MapDataReactive$df$Action)))) == 1)
       {
       MapDataReactive$df <- MapDataReactive$df
@@ -349,8 +347,8 @@ server <- function(input, output, session) {
     if(y %in% MapDataReactive$df$Action)
     {
           print(z)
-          runjs(paste0('$("#',z,'").css({"box-shadow": "0 0 5px 2px rgba(256,256,256,0.9)"})', sep = ""))
-      
+          runjs(paste0('$("#',z,'").css({"background": "url(\'https://www.savethesound.org/wp-content/uploads/2021/01/Inactive_Icon_Climate_and_Resiliency.png\')" "background-size": "cover"; "background-position": "center"; })', sep = ""))
+          
     }else{
       runjs(paste0('$("#',z,'").css({"box-shadow": "unset"})', sep = ""))
     }
