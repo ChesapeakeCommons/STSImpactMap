@@ -34,6 +34,11 @@ library(reshape2)
 library(shinyjs)
 ###########  UI Display Script ############
 ui <- fluidPage(theme = "styler.css",
+                
+   tags$style(type="text/css",
+     ".shiny-output-error { visibility: hidden; }",
+     ".shiny-output-error:before { visibility: hidden; }"
+      ),
 
   shinyjs::useShinyjs(),
   ### DISPLAY COMPONENTS ###
@@ -84,6 +89,8 @@ ui <- fluidPage(theme = "styler.css",
             uiOutput("KeyBar"),
             uiOutput("Filters")
            ),
+           HTML("</>"),
+           uiOutput("Links"),
       )
   )
   
@@ -100,11 +107,11 @@ server <- function(input, output, session) {
   {
     tryCatch(
       expr = {
-        read_sheet(x)
+        suppressMessages(read_sheet(x))
       },
       error = function(e)
       {
-        df <- read_csv(y)
+        suppressMessages(df <- read_csv(y))
       }
     )
   }
@@ -123,17 +130,17 @@ server <- function(input, output, session) {
 
   
   #Boat geoJSON
-  STS_Boat <- rgdal::readOGR("www/STS_Boat_v6.geojson")
+  suppressMessages(STS_Boat <- rgdal::readOGR("www/STS_Boat_v6.geojson"))
   
   #EJ Map Layer 
-  EJLayer <- rgdal::readOGR("www/EJLayer/WGS84_LISej_NYCexpansion.shp")
+  suppressWarnings(EJLayer <- rgdal::readOGR("www/EJLayer/WGS84_LISej_NYCexpansion.shp"))
   
 
  
          #### END IMPORT ####
   ## ****************************# 
   #### IMPORT DATA MOTIFICATIONS #### 
-
+  
   ## Merging input dataset with Symbology datatest
   Import <- merge(Import,Symbology_V1, all.x = TRUE)
   
@@ -197,7 +204,7 @@ server <- function(input, output, session) {
 
    #Splits texts to columns for the Tags and creating MapDataFinal 
    MapDataFinal <- cSplit(MapData, "Tags", ",")
-   
+  
    ## END DATA SETUP 
    
    
@@ -245,6 +252,25 @@ server <- function(input, output, session) {
     )
   })
   
+  # LINKS TO GO BELOW THE LIST OF STUFF 
+  output$Links <- renderUI({
+    tagList(
+      HTML("<br/>"),
+      HTML("&nbsp;"),
+      HTML(paste("<a href='",Text_Input_V1$Link1[1],"'style='color:#ffffff'>Take Action</a>", sep = "")),
+      HTML("<br/>"),
+      HTML("&nbsp;"),
+      HTML(paste("<a href='",Text_Input_V1$Link2[1],"'style='color:#ffffff'>Reports & Publications</a>", sep = "")),
+      HTML("<br/>"),
+      HTML("&nbsp;"),
+      HTML(paste("<a href='",Text_Input_V1$Link3[1],"'style='color:#ffffff'>Sound Health Explorer</a>", sep = "")),
+    )
+    
+    
+    
+    
+    
+  })
   
   
   output$KeyBar <- renderUI({
@@ -494,10 +520,29 @@ server <- function(input, output, session) {
       }")
   })
   
+   ClusterAdjuster <- reactiveValues(S = as.numeric(10))
+  
+   #Reactive which adjusts the cluster based on zoom extent
+   observeEvent(input$leafmap_zoom,
+   {
+     if(is.null(input$leafmap_zoom) || input$leafmap_zoom < 11)
+     {
+       ClusterAdjuster$S <- 10
+     }
+     else
+     {
+       ClusterAdjuster$S <- 30 
+     }
+   })
+   
+   # observeEvent(input$leafmap_markerclusters \_click,
+   #              {
+   #    print("test")
+   #              })
+
+  
 #This updates the map based on the changes in the selected data such that the map doesn't need to redraw every time
-  observeEvent(MapDataReactive$df,
-    {
-  #  print(MapDataReactive())
+  observe({
     Layers <- MapDataReactive$df
     #Creating Map Markers with URL (Will likely store this information in an Action only sheet and then join to layers in program after data importing)
     url <- as.character(Layers$Marker)
@@ -512,13 +557,14 @@ server <- function(input, output, session) {
       PopupImage <- Layers$Image
       
      #Marker creation
-     leafletProxy("leafmap") %>%
+    leafletProxy("leafmap") %>%
        #Clears markers and marker clusters for re render
         clearMarkers()%>%
         clearMarkerClusters()%>%
         addMarkers(data = Layers,
                 lng = ~LONG, lat = ~LAT,
                 icon = mapIcon,
+                clusterId = "cluster",
                 #Label
                 label = Layers$ProjectName,
                 #Marker Cluster Options
@@ -527,8 +573,8 @@ server <- function(input, output, session) {
                                   spiderfyOnMaxZoom = 5,
                                   removeOutsideVisibleBounds = TRUE,
                                   spiderLegPolylineOptions = list(weight = 2, color = "#222", opacity = 0.5), 
-                                  freezeAtZoom = 15,
-                                  maxClusterRadius = 1,
+                                  freezeAtZoom = ClusterAdjuster$S,
+                                  maxClusterRadius = .0000001,
                                   weight=3,
                                   color="#33CC33", opacity=1, fillColor="#FF9900", 
                                   fillOpacity=0.8) ,
@@ -546,19 +592,19 @@ server <- function(input, output, session) {
                                 paste("marker-resize-01"),
                                 paste("marker-resize-02")
                           )) ,
-                              "' style='margin-right:6px;", Layers$Height,"; width:",Layers$Width,"; background-image:url(\"",Layers$Marker,"\");'>",
+                              "' style='margin-right:6px;",Layers$Height,"; width:",Layers$Width,"; background-image:url(\"",Layers$Marker,"\");'>",
                         "</div>",
                           "<div class='popup-title-text'>",
-                            "<span class='popup-title-h1' style=''>", Layers$Action, "</span>",
-                            "<span class='popup-title-h2' style='color:",Layers$Color,";'>", Layers$SubAction,"</span>",
+                            "<span class='popup-title-h1' style=''>",Layers$Action, "</span>",
+                            "<span class='popup-title-h2' style='color:",Layers$Color,";'>",Layers$SubAction,"</span>",
                           "</div>",
                         "</div>",
                         "<div class='popup-body'>",
-                          "<span class='popup-title-h2 pu-h2-adj'><b>Project:</b>", Layers$ProjectName,"</span>",
+                          "<span class='popup-title-h2 pu-h2-adj'><b>Project:</b>",Layers$ProjectName,"</span>",
                           "<span class='popup-line adj'>",
-                            "<b>Status:</b> ",  Layers$Status,"",  
-                            "<b style='margin-left:10px;'>Started:</b> ", Layers$Year, "",
-                            "<b class='no-left-margin' style='margin-left:10px;'>Completed:</b> ", Layers$YearComplete, "<br>",
+                            "<b>Status:</b> ",Layers$Status,"",  
+                            "<b style='margin-left:10px;'>Started:</b> ",Layers$Year, "",
+                            "<b class='no-left-margin' style='margin-left:10px;'>Completed:</b> ",Layers$YearComplete, "<br>",
                            "</span>",
                            "<span class='popup-line popup-line-description",
                                   (ifelse((Layers$ShortDescription == 'NULL')|(is.na(Layers$ShortDescription)),
@@ -613,7 +659,16 @@ server <- function(input, output, session) {
          })
 
   
-  
+  # observeEvent(input$leafmap_zoom, 
+  #              {
+  #             if(input$leafmap_zoom > 11)
+  #              {
+  #               leafletProxy("leafmap")%>%
+  #               
+  #               markerClusterOptions()
+  #              })
+  # 
+   
  }
 
   
