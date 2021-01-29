@@ -196,7 +196,6 @@ server <- function(input, output, session) {
      unique()
 
    #Splits texts to columns for the Tags and creating MapDataFinal 
-   
    MapDataFinal <- cSplit(MapData, "Tags", ",")
    
    ## END DATA SETUP 
@@ -313,10 +312,7 @@ server <- function(input, output, session) {
   ## Function for handling Action Button Clicks
   buttonUpdate <- function(y)
   {
-    #Turning the input Action Text into the button names 
-    z <- str_remove_all(as.character(y)," ")
-    z <- str_remove(z,"&")
-    
+
     #Logic Block
     #If action selected is in dataframe and dataframe isn't the default 
         #If theres only one action selected - do nothing 
@@ -343,21 +339,57 @@ server <- function(input, output, session) {
     {
        MapDataReactive$df <- filter(MapDataFinal, Action == y)
     }
-
-    if(y %in% MapDataReactive$df$Action)
-    {
-      runjs(paste0('$("#',z,'").css({"background": "url(\'https://www.savethesound.org/wp-content/uploads/2020/11/Icon_Climate_and_Resiliency.png\')", "background-size": "cover", "background-position": "center" })', sep = ""))
-          
-    }else{
-      runjs(paste0('$("#',z,'").css({"background": "url(\'https://www.savethesound.org/wp-content/uploads/2021/01/Inactive_Icon_Climate_and_Resiliency.png\')", "background-size": "cover", "background-position": "center" })', sep = ""))
-      
-    }
     
       updateSelectizeInput(session, "inYearSelector",
                            choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
       updateSelectizeInput(session, "inSubActionSelector",
                            choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
   }
+  
+### Sets markers to grey or to normal depending on if they are in the MapDataReactive frame
+  observeEvent(MapDataReactive$df,
+    {
+    ActionsList <- Import$Action %>%
+                  unique()%>%
+                  data.frame()
+        colnames(ActionsList)[1] <- "Action"
+        
+    ActionsSelected <- MapDataReactive$df$Action %>%
+               unique()%>%
+               data.frame()
+    colnames(ActionsSelected)[1] <- "Action"
+    
+     for (row in 1:nrow(ActionsList))
+     {
+       z <- str_remove_all(as.character(ActionsList$Action[row])," ")
+       z <- str_remove(z,"&")
+       
+      if(ActionsList$Action[row] %in% ActionsSelected$Action)
+      {
+        
+        MarkerUrl <- (Symbology_V1)%>%
+          filter(Action == ActionsList$Action[row])%>%
+          select(Marker)%>%
+          as.character()
+          runjs(paste0('$("#',z,'").css({"background": "url(\'',MarkerUrl,'\')", "background-size": "cover", "background-position": "center" })', sep = ""))
+          }
+          else
+          {
+         GreyMarkerUrl <- (Symbology_V1)%>%
+           filter(Action == ActionsList$Action[row])%>%
+           select(MarkerGrey)%>%
+           as.character()
+          runjs(paste0('$("#',z,'").css({"background": "url(\'',GreyMarkerUrl,'\')", "background-size": "cover", "background-position": "center" })', sep = ""))
+       }
+       
+      }
+   })
+    
+
+  
+  
+  
+  
   
   #ResetAll
   observeEvent(input$ResetAll, {
@@ -372,17 +404,6 @@ server <- function(input, output, session) {
                          choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
     updateSelectizeInput(session, "inSubActionSelector",
                          choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
-    
-    #Removes the halo from actions when reset
-    df <- data.frame(unique(MapDataReactive$df$Action))
-    names(df)[1] <- "Action"
-    for (row in 1:nrow(df))
-    {
-      z <- str_remove_all(df$Action[row]," ")
-      z <- str_remove_all(z,"&")
-      runjs(paste0('$("#',z,'").css({"box-shadow": "unset"})', sep = ""))
-    }
-
   })
   
   #ButtonUpdate Function wrapped in an observe Event, ooooh its so much cleaner than before!
