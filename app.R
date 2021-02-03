@@ -47,13 +47,6 @@ ui <- fluidPage(theme = "styler.css",
       div(id = "main-panel",
           
           leafletOutput("leafmap"),
-         # div( class= "key-overlay-container",
-            #  div(class = "key-overlay",
-             #     div(class="key-text",
-                    #  HTML("Key")),
-               #   div(class="key-image")
-             # )
-          #),
           div( class ="compass-overlay-container",
                div( class="compass-overlay")
           )
@@ -85,7 +78,7 @@ ui <- fluidPage(theme = "styler.css",
            #Filter output block - see output$Filters for rendering code
            div(
             class='filters',
-            h5("Select an Action:"),
+            HTML("<span> <b>Select an Action <span>"),
             uiOutput("KeyBar"),
             uiOutput("Filters")
            ),
@@ -117,16 +110,16 @@ server <- function(input, output, session) {
   }
 
   #Raw Data
-  Import <- readsheet("https://docs.google.com/spreadsheets/d/10VMsQ57EL25gDjb7bAEjOZDI2mEWiOkIoHwHWNW0MOE/edit#gid=0", "www/TestData/Input.csv")
+  Import <- readsheet("https://docs.google.com/spreadsheets/d/10VMsQ57EL25gDjb7bAEjOZDI2mEWiOkIoHwHWNW0MOE/edit#gid=0", "www/Data/Input.csv")
 
   #Zoom Extent
-  ZoomExtent_V1 <- readsheet("https://docs.google.com/spreadsheets/d/1viLwGCnhsdhfgsgIHjYYj6INNu7YqG_h8srlQsCNf6Y/edit#gid=0", "www/TestData/Zoom.csv")
+  ZoomExtent_V1 <- readsheet("https://docs.google.com/spreadsheets/d/1viLwGCnhsdhfgsgIHjYYj6INNu7YqG_h8srlQsCNf6Y/edit#gid=0", "www/Data/Zoom.csv")
 
   #Symbology
-  Symbology_V1 <- readsheet("https://docs.google.com/spreadsheets/d/1R5wLQGimKxDGNhMm5NSZLcHM36qFwtdiPzvNmyq2C60/edit#gid=0", "www/TestData/Symbology.csv")
+  Symbology_V1 <- readsheet("https://docs.google.com/spreadsheets/d/1R5wLQGimKxDGNhMm5NSZLcHM36qFwtdiPzvNmyq2C60/edit#gid=0", "www/Data/Symbology.csv")
 
   #Descriptive Text
-  Text_Input_V1 <- readsheet("https://docs.google.com/spreadsheets/d/1zOnGKfYbfOH7C6Dp1BjkpVOd6WenxViqk490DlLbcuI/edit#gid=0", "www/TestData/Text.csv")
+  Text_Input_V1 <- readsheet("https://docs.google.com/spreadsheets/d/1zOnGKfYbfOH7C6Dp1BjkpVOd6WenxViqk490DlLbcuI/edit#gid=0", "www/Data/Text.csv")
 
   
   #Boat geoJSON
@@ -238,15 +231,15 @@ server <- function(input, output, session) {
       
       #Sub Action Selection
       selectizeInput("inSubActionSelector", "Search By Project Type",
-                     choices = MapData$SubAction, multiple = TRUE, options = list(placeholder = 'Select a Project Type!')),
+                     choices = MapData$SubAction, multiple = TRUE, options = list(placeholder = 'Select a Project Type')),
       
       # Year
       selectizeInput("inYearSelector", "Filter By Year",
-                     choices = MapData$Year, multiple = TRUE),
+                     choices = MapData$Year, multiple = TRUE, options = list(placeholder = 'Select a Year')),
       
       # Zoom
-      selectizeInput("inZoomSelector", "Map Location:",
-                     choices = ZoomExtent_V1$Extent, multiple = FALSE),
+      selectizeInput("inZoomSelector", "Map Location",
+                     choices = ZoomExtent_V1$Extent, multiple = FALSE, options = list(placeholder = 'Select a Location')),
       
       actionButton("ResetAll", label = "Reset All")
     )
@@ -338,34 +331,26 @@ server <- function(input, output, session) {
   ## Function for handling Action Button Clicks
   buttonUpdate <- function(y)
   {
-
-    #Logic Block
-    #If action selected is in dataframe and dataframe isn't the default 
-        #If theres only one action selected - do nothing 
-        #Else, remove the selected action from dataframe 
-        #Else, add selected action to dataframe 
-    if(y %in% MapDataReactive$df$Action && nrow(MapDataReactive$df) != nrow(MapDataFinal))
+    
+    #Prevents the map having no markers
+    if(y %in% MapDataReactive$df$Action && nrow(as.data.frame(unique(MapDataReactive$df$Action))) == 1)
     {
-      if((nrow(data.frame(unique(MapDataReactive$df$Action)))) == 1)
-      {
-      MapDataReactive$df <- MapDataReactive$df
-      }
-      else
-      {
-      MapDataReactive$df <- filter(MapDataReactive$df, Action != y)
-      }
+    MapDataReactive$df <- MapDataReactive$df
     }
     else
     {
-      MapDataReactive$df <- unique(rbind(MapDataReactive$df, filter(MapDataFinal, Action == y)))
-    }
-    
-    #If entire dataset is present, only select the chosen action 
-    if(nrow(MapDataReactive$df) == nrow(MapDataFinal))
+    #If button is already selected, it removes it
+    if(y %in% MapDataReactive$df$Action)
     {
-       MapDataReactive$df <- filter(MapDataFinal, Action == y)
+    MapDataReactive$df <- filter(MapDataReactive$df, Action != y)
     }
-    
+    #If button is not selected, it adds it! 
+    else
+    {
+    MapDataReactive$df <- MapDataReactive$df <- unique(rbind(MapDataReactive$df, filter(MapDataFinal, Action == y)))
+    }
+    }
+      #Updates the pulldown inputs 
       updateSelectizeInput(session, "inYearSelector",
                            choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
       updateSelectizeInput(session, "inSubActionSelector",
@@ -410,13 +395,7 @@ server <- function(input, output, session) {
        
       }
    })
-    
 
-  
-  
-  
-  
-  
   #ResetAll
   observeEvent(input$ResetAll, {
 
@@ -430,6 +409,7 @@ server <- function(input, output, session) {
                          choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
     updateSelectizeInput(session, "inSubActionSelector",
                          choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
+    updateSelectizeInput(session, "inZoomSelector", selected = "Whole Region")
   })
   
   #ButtonUpdate Function wrapped in an observe Event, ooooh its so much cleaner than before!
@@ -535,11 +515,6 @@ server <- function(input, output, session) {
      }
    })
    
-   # observeEvent(input$leafmap_markerclusters \_click,
-   #              {
-   #    print("test")
-   #              })
-
   
 #This updates the map based on the changes in the selected data such that the map doesn't need to redraw every time
   observe({
@@ -574,7 +549,7 @@ server <- function(input, output, session) {
                                   removeOutsideVisibleBounds = TRUE,
                                   spiderLegPolylineOptions = list(weight = 2, color = "#222", opacity = 0.5), 
                                   freezeAtZoom = ClusterAdjuster$S,
-                                  maxClusterRadius = .0000001,
+                                  maxClusterRadius = 1,
                                   weight=3,
                                   color="#33CC33", opacity=1, fillColor="#FF9900", 
                                   fillOpacity=0.8) ,
