@@ -622,3 +622,21 @@ p {
 }
 
 
+.marker-cluster{
+  background-image: url('./images/Icon_Cluster.png');
+    background-size: cover;
+  background-position: center;
+   background-repeat: no-repeat;
+   background-color: unset;
+   border-radius: 0px !important;
+     background-color: rgba(128,128,128,0.0) !important;
+     color: #000000 !important;
+  
+}
+.marker-cluster div{
+   background-color: rgba(128,128,128,0.0) !important;
+}
+
+
+
+
