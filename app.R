@@ -78,8 +78,8 @@ ui <- fluidPage(theme = "styler.css",
            #Filter output block - see output$Filters for rendering code
            div(
             class='filters',
-            HTML("<span> <b>Select an Action <span>"),
-            uiOutput("KeyBar"),
+            HTML("<span style='font-weight:bold;'>Select an Action<span>"),
+            HTML("<div style='margin-top:8px;'>"),uiOutput("KeyBar"),HTML("</div>"),
             uiOutput("Filters")
            ),
            HTML("</>"),
