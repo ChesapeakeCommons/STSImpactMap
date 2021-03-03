@@ -64,7 +64,7 @@ ui <- fluidPage(theme = "styler.css",
      
       div( id = "side-panel-wrapper", dir="ltr",
            div(class = "side-panel-description side-panel-goback",
-             HTML("<a href='http://www.savethesound.org' style='color:#ffffff'>Go Back!</a>")
+             HTML("<a href='http://www.savethesound.org' style='color:#ffffff'></a>")
            ),
            div(  class = "side-panel-description",
                   textOutput("DescriptionParagraph")
@@ -72,7 +72,7 @@ ui <- fluidPage(theme = "styler.css",
            div(  class = "side-panel-description",
                  
                  #Text output for Action Count (See output$ActionCount Render Block in Server Side)
-                 textOutput("ActionCount"),
+                # textOutput("ActionCount"),
                  textOutput("DescriptionSentence")
            ),
            #Filter output block - see output$Filters for rendering code
@@ -110,7 +110,7 @@ server <- function(input, output, session) {
   }
 
   #Raw Data
-  Import <- readsheet("https://docs.google.com/spreadsheets/d/10VMsQ57EL25gDjb7bAEjOZDI2mEWiOkIoHwHWNW0MOE/edit#gid=0", "www/Data/Input.csv")
+  Import <- readsheet("https://docs.google.com/spreadsheets/d/10VMsQ57EL25gDjb7bAEjOZDI2mEWiOkIoHwHWNW0MOE/edit#gid=0", "www/Data/Input_v3.csv")
 
   #Zoom Extent
   ZoomExtent_V1 <- readsheet("https://docs.google.com/spreadsheets/d/1viLwGCnhsdhfgsgIHjYYj6INNu7YqG_h8srlQsCNf6Y/edit#gid=0", "www/Data/Zoom.csv")
@@ -147,26 +147,33 @@ server <- function(input, output, session) {
   {
     if(Import$YearComplete[row] == "x")
     {
-      Import$Status[row] <- "On Going"
+      Import$Status[row] <- "Ongoing"
+      Import$YearComplete[row] <- format(Sys.Date(), "%Y")
     }
   else
     {
-     Import$Span[row] <- (as.numeric(Import$YearComplete[row]) - as.numeric(Import$Year[row])) + 1
      Import$Status[row] <- "Complete"
     }
+    Import$Span[row] <- (as.numeric(Import$YearComplete[row]) - as.numeric(Import$Year[row])) + 1
   }
+  
+  
+  Import <- Import %>%
+            mutate(YearComplete = ifelse(Status == "Ongoing","",YearComplete))
+  
 
   #Converts year variables to numeric
   Import$YearComplete <- as.numeric(Import$YearComplete)
   Import$Year <- as.numeric(Import$Year)
   
   
-  #Loops throug and adds additional layers
+  #Loops through and adds additional layers
   MapData <- Import[rep(row.names(Import), Import$Span), 1:ncol(Import)]
+  
+  
               
   #Changes the start year 
-  MapData$Count <- ave(MapData$Year, MapData$ProjectName, FUN = seq_along)
-  
+  MapData$Count <- ave(MapData$Year, MapData$ProjectName, MapData$LAT, FUN = seq_along)
   #Corrects the math
   MapData$Year <- MapData$Year - 1 + MapData$Count
 
@@ -188,16 +195,18 @@ server <- function(input, output, session) {
    MapData[is.na(MapData)] = ""
    MapData[is.null(MapData)] = ""
    
-   ##### CREATING TAGSLIST FOR SEARCH FUNCTION #####
+ #  print(tail(MapData))
+#   write.csv(MapData, "www/Data/MapData.csv")
    
+   ##### CREATING TAGSLIST FOR SEARCH FUNCTION #####
    #Pulls out list of Tags from MapDataFinal static frame 
    TagsList <- data.frame(MapData$Tags, stringsAsFactors = FALSE) %>%
-     separate_rows(MapData.Tags, sep = ",") %>%
+     separate_rows(MapData.Tags, sep = ", ") %>%
      unique()
-
+   print(TagsList)
    #Splits texts to columns for the Tags and creating MapDataFinal 
    MapDataFinal <- cSplit(MapData, "Tags", ",")
-  
+   print(MapDataFinal)
    ## END DATA SETUP 
    
    
@@ -220,23 +229,23 @@ server <- function(input, output, session) {
  #### END IMPORT DATA MOTIFICATIONS ####
     ## ****************************## 
           #### FILTERS #### 
-  
+  #print(TagsList$MapDataFinal.Tags)
   #Original Render for filters 
   output$Filters <- renderUI({
     req(MapData)
     req(ZoomExtent_V1)
     tagList(
       #Tag Word Search 
-      selectizeInput("inTagsSearch" , "Search", choices = sort(c(TagsList$MapData.Tags, MapData$Action, MapData$SubAction, MapData$ProjectName), decreasing = FALSE), multiple = TRUE,  options = list(placeholder = 'What are you looking for?')),
+      selectizeInput("inTagsSearch" , "Search", choices = sort(c(TagsList$MapData.Tags, MapDataFinal$Action, MapDataFinal$SubAction, MapDataFinal$ProjectName), decreasing = FALSE), multiple = TRUE,  options = list(placeholder = 'What are you looking for?')),
       
       #Sub Action Selection
       selectizeInput("inSubActionSelector", "Search By Project Type",
-                     choices = MapData$SubAction, multiple = TRUE, options = list(placeholder = 'Select a Project Type')),
+                     choices = MapDataFinal$SubAction, multiple = TRUE, options = list(placeholder = 'Select a Project Type')),
       
       # Year
       selectizeInput("inYearSelector", "Filter By Year",
-                     choices = MapData$Year, multiple = TRUE, options = list(placeholder = 'Select a Year')),
-      
+                     choices = unique(MapDataFinal$Year), multiple = TRUE, selected = 2020),
+            
       # Zoom
       selectizeInput("inZoomSelector", "Map Location",
                      choices = ZoomExtent_V1$Extent, multiple = FALSE, options = list(placeholder = 'Select a Location')),
@@ -323,7 +332,6 @@ server <- function(input, output, session) {
   })
   
   # #### FILTER INPUT DATA HANDLING ###
-  
   #ReactiveVal for handling MapData
   MapDataReactive <- reactiveValues(df = data.frame())
   MapDataReactive$df <- as.data.frame(MapDataFinal)
@@ -340,6 +348,10 @@ server <- function(input, output, session) {
     else
     {
     #If button is already selected, it removes it
+    # if(nrow(MapDataReactive$df$Action) = nrow(MapDataFinal))
+    # {
+    #   MapDataReactive$df <- 
+    # }
     if(y %in% MapDataReactive$df$Action)
     {
     MapDataReactive$df <- filter(MapDataReactive$df, Action != y)
@@ -347,12 +359,13 @@ server <- function(input, output, session) {
     #If button is not selected, it adds it! 
     else
     {
-    MapDataReactive$df <- MapDataReactive$df <- unique(rbind(MapDataReactive$df, filter(MapDataFinal, Action == y)))
+    #print(MapDataFinal)
+    MapDataReactive$df <- MapDataReactive$df <- unique(rbind(MapDataReactive$df, filter(as_tibble(MapDataFinal), Action == y)))
     }
     }
       #Updates the pulldown inputs 
       updateSelectizeInput(session, "inYearSelector",
-                           choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
+                           choices = sort(MapDataReactive$df$Year, decreasing = TRUE), options = list(placeholder = 'Select a Year'))
       updateSelectizeInput(session, "inSubActionSelector",
                            choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
   }
@@ -427,18 +440,18 @@ server <- function(input, output, session) {
   observeEvent(input$inSubActionSelector, {
     MapDataReactive$df <- filter(MapDataReactive$df, SubAction %in% input$inSubActionSelector)
     updateSelectizeInput(session, "inSubActionSelector",
-                         choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
+                         choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE), selected = input$inSubActionSelector)
     updateSelectizeInput(session, "inYearSelector",
-                         choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
+                         choices = sort(MapDataReactive$df$Year, decreasing = TRUE), selected = input$inYearSelector)
   })
 
   #Year Update
   observeEvent(input$inYearSelector, {
     MapDataReactive$df <- filter(MapDataReactive$df, Year %in% input$inYearSelector)
     updateSelectizeInput(session, "inYearSelector",
-                         choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
+                         choices = sort(MapDataReactive$df$Year, decreasing = TRUE), selected = input$inYearSelector)
     updateSelectizeInput(session, "inSubActionSelector",
-                         choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE))
+                         choices = sort(MapDataReactive$df$SubAction, decreasing = TRUE),selected = input$inSubActionSelector)
   })
   
   #Tags Update
@@ -507,7 +520,8 @@ server <- function(input, output, session) {
    {
      if(is.null(input$leafmap_zoom) || input$leafmap_zoom < 11)
      {
-       ClusterAdjuster$S <- 10
+       leafletProxy("leafMap")%>%
+       clearMarkerClusters()
      }
      else
      {
@@ -518,7 +532,8 @@ server <- function(input, output, session) {
   
 #This updates the map based on the changes in the selected data such that the map doesn't need to redraw every time
   observe({
-    Layers <- MapDataReactive$df
+    Layers <- MapDataReactive$df %>%
+              distinct(Action, SubAction, ProjectName,LAT,LONG, .keep_all = TRUE)
     #Creating Map Markers with URL (Will likely store this information in an Action only sheet and then join to layers in program after data importing)
     url <- as.character(Layers$Marker)
     w <- str_remove_all(Layers$Width, "[px]")
@@ -532,14 +547,13 @@ server <- function(input, output, session) {
       PopupImage <- Layers$Image
       
      #Marker creation
-    leafletProxy("leafmap") %>%
+    leafletProxy("leafmap")%>%
        #Clears markers and marker clusters for re render
         clearMarkers()%>%
         clearMarkerClusters()%>%
         addMarkers(data = Layers,
                 lng = ~LONG, lat = ~LAT,
                 icon = mapIcon,
-                clusterId = "cluster",
                 #Label
                 label = Layers$ProjectName,
                 #Marker Cluster Options
@@ -548,8 +562,8 @@ server <- function(input, output, session) {
                                   spiderfyOnMaxZoom = 5,
                                   removeOutsideVisibleBounds = TRUE,
                                   spiderLegPolylineOptions = list(weight = 2, color = "#222", opacity = 0.5), 
-                                  freezeAtZoom = ClusterAdjuster$S,
-                                  maxClusterRadius = 1,
+                                  freezeAtZoom = 10,
+                                  maxClusterRadius = 5,
                                   weight=3,
                                   color="#33CC33", opacity=1, fillColor="#FF9900", 
                                   fillOpacity=0.8) ,
@@ -598,13 +612,13 @@ server <- function(input, output, session) {
                                                                paste("hide"),
                                                                paste("")
                                    )) , 
-                                "'><b>",Layers$KeyMetric1,"ggg:</b> ",Layers$Value1,"</span>",
+                                "'><b>",paste(Layers$KeyMetric1,":", sep=""),"</b> ",Layers$Value1,"</span>",
                             "<span class='popup-line popup-line-adj",
                                    (ifelse((Layers$Value1 == "") | (Layers$Value2 == "NULL") |(is.na(Layers$Value2)),
                                        paste("hide"),
                                        paste("")
                                 )) , 
-                              "'><b>",Layers$KeyMetric2,":fff</b> ",Layers$Value2,"</span>",
+                              "'><b>",paste(Layers$KeyMetric2,":", sep=""),"</b> ",Layers$Value2,"</span>",
                             "<span class='popup-line",
                                   (ifelse((Layers$Url == '')|(is.na(Layers$Url)),
                                           paste("hide"),
