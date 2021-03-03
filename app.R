@@ -194,19 +194,16 @@ server <- function(input, output, session) {
   
    MapData[is.na(MapData)] = ""
    MapData[is.null(MapData)] = ""
-   
- #  print(tail(MapData))
-#   write.csv(MapData, "www/Data/MapData.csv")
-   
+
    ##### CREATING TAGSLIST FOR SEARCH FUNCTION #####
    #Pulls out list of Tags from MapDataFinal static frame 
    TagsList <- data.frame(MapData$Tags, stringsAsFactors = FALSE) %>%
      separate_rows(MapData.Tags, sep = ", ") %>%
      unique()
-   print(TagsList)
+   
    #Splits texts to columns for the Tags and creating MapDataFinal 
    MapDataFinal <- cSplit(MapData, "Tags", ",")
-   print(MapDataFinal)
+
    ## END DATA SETUP 
    
    
@@ -229,7 +226,7 @@ server <- function(input, output, session) {
  #### END IMPORT DATA MOTIFICATIONS ####
     ## ****************************## 
           #### FILTERS #### 
-  #print(TagsList$MapDataFinal.Tags)
+
   #Original Render for filters 
   output$Filters <- renderUI({
     req(MapData)
@@ -348,10 +345,6 @@ server <- function(input, output, session) {
     else
     {
     #If button is already selected, it removes it
-    # if(nrow(MapDataReactive$df$Action) = nrow(MapDataFinal))
-    # {
-    #   MapDataReactive$df <- 
-    # }
     if(y %in% MapDataReactive$df$Action)
     {
     MapDataReactive$df <- filter(MapDataReactive$df, Action != y)
@@ -359,8 +352,10 @@ server <- function(input, output, session) {
     #If button is not selected, it adds it! 
     else
     {
-    #print(MapDataFinal)
-    MapDataReactive$df <- MapDataReactive$df <- unique(rbind(MapDataReactive$df, filter(as_tibble(MapDataFinal), Action == y)))
+    print(colnames(MapDataFinal))
+    print(colnames(MapDataReactive$df))
+    MapDataReactive$df <- unique(rbind(as_tibble(MapDataReactive$df), filter(as_tibble(MapDataFinal), Action == y)))
+#     <- 
     }
     }
       #Updates the pulldown inputs 
