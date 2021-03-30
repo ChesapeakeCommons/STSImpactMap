@@ -110,7 +110,7 @@ server <- function(input, output, session) {
   }
 
   #Raw Data
-  Import <- readsheet("https://docs.google.com/spreadsheets/d/10VMsQ57EL25gDjb7bAEjOZDI2mEWiOkIoHwHWNW0MOE/edit#gid=0", "www/Data/Input_v3.csv")
+  Import <- readsheet("https://docs.google.com/spreadsheets/d/1Hf6V-pWunsaA1Vt3tvvf12D0G5MwFKCe61SIr1sVAfg/edit#gid=0", "www/Data/Input_v3.csv")
 
   #Zoom Extent
   ZoomExtent_V1 <- readsheet("https://docs.google.com/spreadsheets/d/1viLwGCnhsdhfgsgIHjYYj6INNu7YqG_h8srlQsCNf6Y/edit#gid=0", "www/Data/Zoom.csv")
@@ -123,10 +123,10 @@ server <- function(input, output, session) {
 
   
   #Boat geoJSON
-  suppressMessages(STS_Boat <- rgdal::readOGR("www/STS_Boat_v6.geojson"))
+  STS_Boat <- rgdal::readOGR("www/STS_Boat_v6.geojson", verbose = FALSE)
   
   #EJ Map Layer 
-  suppressWarnings(EJLayer <- rgdal::readOGR("www/EJLayer/WGS84_LISej_NYCexpansion.shp"))
+  suppressWarnings(EJLayer <- rgdal::readOGR("www/EJLayer/WGS84_LISej_NYCexpansion.shp", verbose = FALSE))
   
 
  
@@ -253,16 +253,18 @@ server <- function(input, output, session) {
   
   # LINKS TO GO BELOW THE LIST OF STUFF 
   output$Links <- renderUI({
+  #  t <- "target="_blank""
+ #   print(t)
     tagList(
       HTML("<br/>"),
       HTML("&nbsp;"),
-      HTML(paste("<a href='",Text_Input_V1$Link1[1],"'style='color:#ffffff'>Take Action</a>", sep = "")),
+      tags$a(href=Text_Input_V1$Link1[1], "Take Action", style="color:#ffffff", target="_blank"),
       HTML("<br/>"),
       HTML("&nbsp;"),
-      HTML(paste("<a href='",Text_Input_V1$Link2[1],"'style='color:#ffffff'>Reports & Publications</a>", sep = "")),
+      tags$a(href=Text_Input_V1$Link2[1], "Reports & Publications", style="color:#ffffff", target="_blank"),
       HTML("<br/>"),
       HTML("&nbsp;"),
-      HTML(paste("<a href='",Text_Input_V1$Link3[1],"'style='color:#ffffff'>Sound Health Explorer</a>", sep = "")),
+      tags$a(href=Text_Input_V1$Link3[1], "Sound Health Explorer", style="color:#ffffff", target="_blank"),
     )
     
     
@@ -646,17 +648,6 @@ server <- function(input, output, session) {
           leafletProxy("leafmap")%>%
           setView(lng = ZoomSelection()$Longitude, lat = ZoomSelection()$Latitude, zoom = ZoomSelection()$Zoom)
          })
-
-  
-  # observeEvent(input$leafmap_zoom, 
-  #              {
-  #             if(input$leafmap_zoom > 11)
-  #              {
-  #               leafletProxy("leafmap")%>%
-  #               
-  #               markerClusterOptions()
-  #              })
-  # 
    
  }
 
