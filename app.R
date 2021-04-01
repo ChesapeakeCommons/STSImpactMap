@@ -55,7 +55,7 @@ ui <- fluidPage(theme = "styler.css",
   # Side Panel Display with Save the Sound Info
   ),
   div(id = "side-panel", dir="lrt",
-      HTML("<a href='http://www.savethesound.org' style='color:#ffffff;'>"),
+      HTML("<a href='http://www.savethesound.org' target=_\"blank\", style='color:#ffffff;'>"),
       div(  id = "title"
             
       #Descriptive Text 
@@ -201,8 +201,11 @@ server <- function(input, output, session) {
      separate_rows(MapData.Tags, sep = ", ") %>%
      unique()
    
+   
    #Splits texts to columns for the Tags and creating MapDataFinal 
    MapDataFinal <- cSplit(MapData, "Tags", ",")
+   
+   Tags <- unique(str_remove(c(TagsList$MapData.Tags, MapDataFinal$Action, MapDataFinal$SubAction, MapDataFinal$ProjectName),","))
 
    ## END DATA SETUP 
    
@@ -222,18 +225,21 @@ server <- function(input, output, session) {
     Text_Input_V1$DescriptionSentence
   })
   
-  
  #### END IMPORT DATA MOTIFICATIONS ####
     ## ****************************## 
+  
           #### FILTERS #### 
 
+  
   #Original Render for filters 
   output$Filters <- renderUI({
     req(MapData)
     req(ZoomExtent_V1)
+    
+    
     tagList(
       #Tag Word Search 
-      selectizeInput("inTagsSearch" , "Search", choices = sort(c(TagsList$MapData.Tags, MapDataFinal$Action, MapDataFinal$SubAction, MapDataFinal$ProjectName), decreasing = FALSE), multiple = TRUE,  options = list(placeholder = 'What are you looking for?')),
+      selectizeInput("inTagsSearch" , "Search", choices = sort(Tags, decreasing = FALSE), multiple = TRUE,  options = list(placeholder = 'What are you looking for?')),
       
       #Sub Action Selection
       selectizeInput("inSubActionSelector", "Search By Project Type",
@@ -253,8 +259,6 @@ server <- function(input, output, session) {
   
   # LINKS TO GO BELOW THE LIST OF STUFF 
   output$Links <- renderUI({
-  #  t <- "target="_blank""
- #   print(t)
     tagList(
       HTML("<br/>"),
       HTML("&nbsp;"),
@@ -354,10 +358,7 @@ server <- function(input, output, session) {
     #If button is not selected, it adds it! 
     else
     {
-    print(colnames(MapDataFinal))
-    print(colnames(MapDataReactive$df))
     MapDataReactive$df <- unique(rbind(as_tibble(MapDataReactive$df), filter(as_tibble(MapDataFinal), Action == y)))
-#     <- 
     }
     }
       #Updates the pulldown inputs 
@@ -414,7 +415,7 @@ server <- function(input, output, session) {
     
     #Updates the seletize Inputs 
     updateSelectizeInput(session, "inTagsSearch",
-                         choices = sort(c(TagsList$MapData.Tags, MapData$Action, MapData$SubAction, MapData$ProjectName), decreasing = FALSE), options = list(placeholder = 'What are you looking for?'))
+                         choices = sort(Tags, decreasing = FALSE), options = list(placeholder = 'What are you looking for?'))
     updateSelectizeInput(session, "inYearSelector",
                          choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
     updateSelectizeInput(session, "inSubActionSelector",
@@ -453,8 +454,10 @@ server <- function(input, output, session) {
   
   #Tags Update
   observeEvent(input$inTagsSearch, {
-    
+    print(input$inTagsSearch)
+  #  Tags <- unique(tolower(c(TagsList$MapData.Tags, MapDataFinal$Action, MapDataFinal$SubAction, MapDataFinal$ProjectName)))
     MapDataReactive$df <- MapDataFinal %>% 
+                          #mutate_if(is.character, tolower(.))%>%
                           filter_all(any_vars(. %in% input$inTagsSearch))
     updateSelectizeInput(session, "inYearSelector",
                          choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
@@ -545,7 +548,7 @@ server <- function(input, output, session) {
       
      #Marker creation
     leafletProxy("leafmap")%>%
-       #Clears markers and marker clusters for re render
+        #Clears markers and marker clusters for re render
         clearMarkers()%>%
         clearMarkerClusters()%>%
         addMarkers(data = Layers,
@@ -622,7 +625,8 @@ server <- function(input, output, session) {
                                           paste("")
                                   )) , 
                             "'>", 
-                                "<b>More Info:</b><a href='",Layers$Url,"'>",Layers$Url,"</a>",
+                                "<b>More Info:</b><a href='",Layers$Url,"'target=_\"blank\">",Layers$Url,"</a>",
+                  
                             "</span>",
                             "<span class='popup-line' style='text-overflow: ellipsis'>", 
                               "<span class='popup-line",
