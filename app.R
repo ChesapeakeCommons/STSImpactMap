@@ -45,7 +45,6 @@ ui <- fluidPage(theme = "styler.css",
   div(id = "wrapper",
       #Map
       div(id = "main-panel",
-          
           leafletOutput("leafmap"),
           div( class ="compass-overlay-container",
                div( class="compass-overlay")
@@ -85,8 +84,7 @@ ui <- fluidPage(theme = "styler.css",
            HTML("</>"),
            uiOutput("Links"),
       )
-  )
-  
+  ),
 )
 ########## Server Side Script ############
 server <- function(input, output, session) {
@@ -166,12 +164,9 @@ server <- function(input, output, session) {
   Import$YearComplete <- as.numeric(Import$YearComplete)
   Import$Year <- as.numeric(Import$Year)
   
-  
   #Loops through and adds additional layers
   MapData <- Import[rep(row.names(Import), Import$Span), 1:ncol(Import)]
   
-  
-              
   #Changes the start year 
   MapData$Count <- ave(MapData$Year, MapData$ProjectName, MapData$LAT, FUN = seq_along)
   #Corrects the math
@@ -188,7 +183,6 @@ server <- function(input, output, session) {
   }
 
    #Converting all characters to factors, and setting NAs to blank
-  
    i <- sapply(MapData, is.factor)
    MapData[i] <- lapply(MapData[i], as.character)
   
@@ -200,12 +194,17 @@ server <- function(input, output, session) {
    TagsList <- data.frame(MapData$Tags, stringsAsFactors = FALSE) %>%
      separate_rows(MapData.Tags, sep = ", ") %>%
      unique()
-   
-   
+
    #Splits texts to columns for the Tags and creating MapDataFinal 
-   MapDataFinal <- cSplit(MapData, "Tags", ",")
+   MapDataFinal <- cSplit(MapData, "Tags", ",")%>%
+                    mutate_at(vars(contains("Tags")), ~str_to_title(.))%>%
+                    mutate(ProjectName == str_to_title(ProjectName))
+  
+   Tags <- str_remove(c(TagsList$MapData.Tags, MapDataFinal$Action, MapDataFinal$SubAction, MapDataFinal$ProjectName),",")%>%
+           str_to_title(.)%>%
+           unique()
    
-   Tags <- unique(str_remove(c(TagsList$MapData.Tags, MapDataFinal$Action, MapDataFinal$SubAction, MapDataFinal$ProjectName),","))
+   Tags <- c(Tags,MapDataFinal$LocationName)
 
    ## END DATA SETUP 
    
@@ -342,7 +341,13 @@ server <- function(input, output, session) {
   ## Function for handling Action Button Clicks
   buttonUpdate <- function(y)
   {
-    
+    #if all actions are present, removes all markers except the selected one. 
+    if(unique(MapDataFinal$Action) == unique(MapDataReactive$df$Action))
+    {
+    MapDataReactive$df <- filter(MapDataFinal, Action == y)
+    }   
+    else
+    {
     #Prevents the map having no markers
     if(y %in% MapDataReactive$df$Action && nrow(as.data.frame(unique(MapDataReactive$df$Action))) == 1)
     {
@@ -359,6 +364,7 @@ server <- function(input, output, session) {
     else
     {
     MapDataReactive$df <- unique(rbind(as_tibble(MapDataReactive$df), filter(as_tibble(MapDataFinal), Action == y)))
+    }
     }
     }
       #Updates the pulldown inputs 
@@ -409,7 +415,6 @@ server <- function(input, output, session) {
 
   #ResetAll
   observeEvent(input$ResetAll, {
-
     #Sets the MapDataReactive$df to be all
     MapDataReactive$df <- as.data.frame(MapDataFinal)
     
@@ -455,10 +460,9 @@ server <- function(input, output, session) {
   #Tags Update
   observeEvent(input$inTagsSearch, {
     print(input$inTagsSearch)
-  #  Tags <- unique(tolower(c(TagsList$MapData.Tags, MapDataFinal$Action, MapDataFinal$SubAction, MapDataFinal$ProjectName)))
     MapDataReactive$df <- MapDataFinal %>% 
-                          #mutate_if(is.character, tolower(.))%>%
-                          filter_all(any_vars(. %in% input$inTagsSearch))
+                          filter_all(any_vars(str_detect(.,input$inTagsSearch)))
+    
     updateSelectizeInput(session, "inYearSelector",
                          choices = sort(MapDataReactive$df$Year, decreasing = TRUE))
     updateSelectizeInput(session, "inSubActionSelector",
