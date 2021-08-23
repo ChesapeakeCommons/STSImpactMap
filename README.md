@@ -113,7 +113,7 @@ The **Zoom_Extent** sheet controls the zoom levels and locations for the extent 
    * Zoom
       * Higher number = more zoomed in.
       
- ## Iages
+ ## Images
  Images for the actions, symbology, application title, key, and compass rose, are hosted on the Save the Sound website. 
  Image links can be found [here](https://docs.google.com/spreadsheets/d/1lPJKhxGUZ4C4RSy0zVy4wzC4VAKcKAc257Co_pMy-eM/edit#gid=0). **Note, application images like the key and title, need to maintain URLs and dimensions when updating.**
 
