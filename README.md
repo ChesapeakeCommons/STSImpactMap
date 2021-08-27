@@ -1,8 +1,9 @@
 Save The Sound 2020 Impact Map
 ---------------
 
-Below you will find information documenting the database structure and information relating to data editing for the Save the Sound Impact Map. Please disseminate to anyone who will be editing or entering input data for the application.
+About
 ---------------
+The Save The Sound 2020 Impact Map was built for the [Save The Sound](https://www.savethesound.org/) orginization by [The Commons](https://www.ourcommoncode.org/) to communicate and catalog their various efforts to improve the greater Long Island Sound. Below you will find general information about the Save the Sound Impact Map and documention for the database control sheets. App documentation can be found inline in App.R and Styler.css. Please disseminate to anyone who will be editing or entering input data for the application.
 
 Quick Links
 ---------------
@@ -15,11 +16,8 @@ Quick Links
 
 [Git](https://github.com/ChesapeakeCommons/STSImpactMap)
 
-
-
 Version Control and Access 
 ---------------
-
 You can download the application from the [git repository.](https://github.com/ChesapeakeCommons/STSImpactMap) After downloading, please fork a new branch, and name it your last name, and date. e.g. Watson_07_08. Make any changes you'd like to this branch - it is yours. If there is a bug or problem with the Master branch, please perform a pull request to make changes to the core application and to be subsequently approved by the Commons team.
 
 Application Publishing
@@ -74,7 +72,7 @@ The **Production_Input** sheet contains the raw Action level data to be ingested
       * No character limit
    * URL 
    * Tags 
-		  * Enter comma delimited words to show up in the search box 
+     * Enter comma delimited words to show up in the search box 
    
 ## **Symbology**
 The **Symbology** sheet contains the master list of actions and their Icons. It also contains placeholder image for when no image is provided in **Production_Input**. 
